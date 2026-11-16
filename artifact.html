@@ -1,0 +1,1408 @@
+<title>Environmental GIS Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a map-sheet reference. Narrow sticky header, one raster band, then five project sheets.
+   Each sheet = map slot + title block, then a live demo panel, then a collapsible workflow. */
+:root{
+  --bg:#eef2f0; --surface:#f9fbfa; --ink:#0e1d1a; --ink-2:#4a5b57; --line:#cdd8d4;
+  --accent:#0b6b5c; --accent-ink:#ffffff; --heat:#d9541e; --water:#2a78d6;
+  --warn-bg:#f9dccd; --ok-bg:#d4ece5; --neutral-bg:#e3e9e6;
+  --err:#b3321a; --code-bg:#f1f5f3; --tk-kw:#8a2f7a; --tk-str:#8a4b08; --tk-com:#5a6b66; --tk-num:#1f5fae; --tk-fn:#0b6b5c;
+  --font-display:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;
+  --font-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1514; --surface:#121e1c; --ink:#e8f0ed; --ink-2:#9fb2ad; --line:#274039;
+    --accent:#3fb8a2; --accent-ink:#06201b; --heat:#f07a45; --water:#3987e5;
+    --warn-bg:#4a2314; --ok-bg:#17382f; --neutral-bg:#1d2d2a;
+    --err:#ff8a63; --code-bg:#0e1917; --tk-kw:#e0a0d6; --tk-str:#e8b46a; --tk-com:#8aa19a; --tk-num:#86b8f4; --tk-fn:#5fd0ba; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1514; --surface:#121e1c; --ink:#e8f0ed; --ink-2:#9fb2ad; --line:#274039;
+  --accent:#3fb8a2; --accent-ink:#06201b; --heat:#f07a45; --water:#3987e5;
+  --warn-bg:#4a2314; --ok-bg:#17382f; --neutral-bg:#1d2d2a;
+    --err:#ff8a63; --code-bg:#0e1917; --tk-kw:#e0a0d6; --tk-str:#e8b46a; --tk-com:#8aa19a; --tk-num:#86b8f4; --tk-fn:#5fd0ba; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--font-body)}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:balance;letter-spacing:-0.01em}
+p{margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:10px}
+.brand{font:700 1.05rem var(--font-display);white-space:nowrap;color:var(--ink);text-decoration:none}
+.nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{font:500 .8rem var(--font-mono);color:var(--ink-2);text-decoration:none;padding:6px 10px;border:1px solid transparent;border-radius:4px;white-space:nowrap}
+.nav a:hover{border-color:var(--line);color:var(--ink)}
+.tbtn{font:500 .78rem var(--font-mono);background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:6px 10px;cursor:pointer}
+.tbtn:hover{border-color:var(--ink-2)}
+
+/* hero */
+.hero{padding-block:40px 24px;display:grid;gap:24px}
+.hero h1{font-size:clamp(2.1rem,6vw,3.6rem);max-width:16ch}
+.hero .lede{max-width:56ch;color:var(--ink-2);font-size:1.08rem}
+.band{display:block;width:100%;height:96px;image-rendering:pixelated;border:1px solid var(--line);border-radius:2px}
+.index{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.index li{border-bottom:1px solid var(--line)}
+.index a{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) auto;gap:8px 20px;align-items:center;padding:14px 4px;text-decoration:none;color:var(--ink)}
+.index a:hover{background:var(--surface)}
+.index .t{font:600 1.02rem var(--font-display)}
+.index .m{font:400 .78rem var(--font-mono);color:var(--ink-2)}
+@media (max-width:720px){.index a{grid-template-columns:1fr}}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;font:500 .72rem var(--font-mono);padding:3px 9px;border-radius:99px;background:var(--neutral-bg);color:var(--ink);white-space:nowrap}
+.pill.live{background:var(--ok-bg)}
+.pill.warn{background:var(--warn-bg)}
+.pill.outline{background:transparent;border:1px solid var(--line);color:var(--ink-2)}
+.pill i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+
+/* sheets */
+.sheet{padding-block:44px;border-top:1px solid var(--line);scroll-margin-top:56px}
+.sheet-head{display:grid;gap:10px;margin-bottom:22px}
+.sheet-head h2{font-size:clamp(1.6rem,4vw,2.3rem)}
+.sheet-head .q{color:var(--ink-2);max-width:62ch}
+.sheet-body{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.sheet-body{grid-template-columns:minmax(0,1fr)}}
+.mapslot{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:2px;min-height:240px;display:grid}
+.mapslot img{display:block;width:100%;height:auto}
+.mapslot figcaption{font-size:.82rem;color:var(--ink-2);padding:8px 12px;border-top:1px solid var(--line)}
+.mapslot-empty{display:grid;gap:10px;align-content:center;justify-items:start;padding:24px;
+  background-image:repeating-linear-gradient(45deg,transparent 0 11px,var(--line) 11px 12px);background-blend-mode:normal}
+.mapslot-empty p{background:var(--surface);padding:4px 6px;max-width:44ch;color:var(--ink-2);font-size:.92rem}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:2px}
+.tb{margin:0;display:grid}
+.tb div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.tb div:last-child{border-bottom:0}
+.tb dt{font:500 .7rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);padding-top:2px}
+.tb dd{margin:0;font-size:.9rem;min-width:0;overflow-wrap:anywhere}
+.tb dd a{display:block}
+
+/* demo */
+.demo{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:2px;background:var(--surface)}
+.demo-title{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:14px}
+.demo-title h3{font-size:1.15rem}
+.demo-title span{font:400 .75rem var(--font-mono);color:var(--ink-2)}
+.demo-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.demo-grid{grid-template-columns:minmax(0,1fr)}}
+.demo-main,.demo-side{display:grid;gap:12px;min-width:0}
+.demo canvas{display:block;width:100%;height:auto;image-rendering:pixelated;border:1px solid var(--line);background:var(--bg);cursor:crosshair}
+.legend{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;font:400 .72rem var(--font-mono);color:var(--ink-2)}
+.legend i{height:10px;border-radius:1px;border:1px solid var(--line)}
+.legend-cap{font:400 .72rem var(--font-mono);color:var(--ink-2)}
+.swatches{display:flex;flex-wrap:wrap;gap:6px 14px;font:400 .72rem var(--font-mono);color:var(--ink-2)}
+.swatches span{display:inline-flex;align-items:center;gap:6px}
+.swatches b{width:12px;height:12px;border:1px solid var(--line);display:inline-block}
+.readout{font:400 .8rem var(--font-mono);color:var(--ink-2);min-height:1.3em}
+.ctl{display:grid;gap:5px}
+.ctl label{font:500 .8rem var(--font-body);display:flex;justify-content:space-between;gap:10px}
+.ctl output{font:500 .8rem var(--font-mono);color:var(--accent)}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl select{font:400 .88rem var(--font-body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:7px 8px;width:100%}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.88rem}
+.check input{margin-top:4px;accent-color:var(--accent)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:500 .82rem var(--font-body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:3px;padding:8px 12px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;margin:0}
+.stats div{min-width:0}
+.stats dt{font:500 .68rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2);margin-bottom:2px}
+.stats dd{margin:0;font:600 1.2rem var(--font-display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stats dd small{font:400 .72rem var(--font-mono);color:var(--ink-2)}
+.chart{margin:0;display:grid;gap:4px}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart figcaption{font:400 .74rem var(--font-mono);color:var(--ink-2)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .axis{stroke:var(--ink-2);stroke-width:1}
+.chart .tk{fill:var(--ink-2);font:10.5px var(--font-mono)}
+.chart .lab{fill:var(--ink-2);font:11px var(--font-body)}
+.note{margin-top:14px;font-size:.82rem;color:var(--ink-2);max-width:78ch}
+.bi{display:grid;grid-template-columns:auto 54px;gap:4px 8px;align-items:center;justify-content:start}
+.bi .g{display:grid;grid-template-columns:repeat(3,18px);grid-template-rows:repeat(3,18px);gap:2px;border:1px solid var(--line);padding:2px}
+.bi .g b{display:block}
+.bi small{font:400 .7rem var(--font-mono);color:var(--ink-2)}
+
+/* workflow */
+details.flow{margin-top:14px;border:1px solid var(--line);border-radius:2px;background:var(--surface)}
+details.flow summary{cursor:pointer;padding:12px 16px;font:600 .95rem var(--font-display)}
+details.flow .in{padding:2px 16px 16px;display:grid;gap:10px;color:var(--ink-2)}
+details.flow ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.foot{padding-block:36px 56px;border-top:1px solid var(--line);color:var(--ink-2);font-size:.88rem;display:grid;gap:8px;max-width:78ch}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* ---- multi-page additions ---- */
+.page[hidden]{display:none}
+.nav a[aria-current="page"]{color:var(--ink);border-color:var(--ink-2);background:var(--surface)}
+.ph{padding-block:40px 18px;display:grid;gap:12px}
+.ph h1{font-size:clamp(2rem,5.5vw,3.1rem)}
+.ph p{max-width:64ch;color:var(--ink-2);font-size:1.05rem}
+.sec-title{font:700 1.3rem var(--font-display);margin:38px 0 14px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.tiles{grid-template-columns:minmax(0,1fr)}}
+.tile{display:grid;gap:8px;align-content:start;padding:18px;border:1px solid var(--line);background:var(--surface);border-radius:2px;color:var(--ink);text-decoration:none;min-width:0}
+.tile:hover{border-color:var(--accent)}
+.tile h3{font-size:1.35rem}
+.tile p{color:var(--ink-2);font-size:.92rem}
+.tile .kicker{font:500 .7rem var(--font-mono);text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2)}
+.tile .go{font:500 .78rem var(--font-mono);color:var(--accent)}
+.foot{max-width:none}
+
+/* tools */
+.tgrid{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start;padding-bottom:12px}
+@media (max-width:860px){.tgrid{grid-template-columns:minmax(0,1fr)}}
+.tool{padding:18px;border:1px solid var(--line);background:var(--surface);border-radius:2px;display:grid;gap:12px;min-width:0;scroll-margin-top:64px}
+.tool.wide{grid-column:1/-1}
+.tool h3{font-size:1.15rem}
+.tool .desc{color:var(--ink-2);font-size:.88rem}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.fields.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:480px){.fields.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.field{display:grid;gap:4px;min-width:0;align-content:start}
+.field label{font:500 .78rem var(--font-body)}
+.in{font:400 .9rem var(--font-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:8px 9px;width:100%;min-width:0}
+textarea.in{min-height:210px;resize:vertical;line-height:1.4;font-size:.8rem}
+.res{display:grid;margin:0;border:1px solid var(--line);border-radius:2px;background:var(--bg)}
+.res>div{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--line)}
+.res>div:last-child{border-bottom:0}
+.res dt{font:500 .66rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+.res dd{margin:0;font:400 .85rem var(--font-mono);overflow-wrap:anywhere;min-width:0}
+.cp{font:500 .68rem var(--font-mono);background:transparent;border:1px solid var(--line);color:var(--ink-2);border-radius:3px;padding:3px 7px;cursor:pointer}
+.cp:hover{color:var(--ink);border-color:var(--ink-2)}
+.msg{font-size:.82rem;color:var(--ink-2)}
+.msg:empty{display:none}
+.msg.err{color:var(--err)}
+.formula{font:400 .78rem var(--font-mono);color:var(--ink-2)}
+.gj{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.gj{grid-template-columns:minmax(0,1fr)}}
+.gj-side{display:grid;gap:12px;min-width:0}
+.gj svg{width:100%;height:auto;display:block;border:1px solid var(--line);background:var(--bg)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);background:var(--bg)}
+table.t{border-collapse:collapse;width:100%;min-width:560px;font-size:.86rem}
+table.t th,table.t td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.t th{font:500 .68rem var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-2)}
+table.t td:first-child{font-family:var(--font-mono);white-space:nowrap}
+table.t tr:last-child td{border-bottom:0}
+
+/* code */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:500 .78rem var(--font-mono);background:transparent;color:var(--ink-2);border:1px solid var(--line);border-radius:99px;padding:5px 12px;cursor:pointer}
+.chip:hover{color:var(--ink);border-color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.key{display:flex;gap:14px;flex-wrap:wrap;font:400 .76rem var(--font-mono);color:var(--ink-2);margin-top:6px}
+.snips{display:grid;gap:18px;margin-top:18px}
+.snip{border:1px solid var(--line);border-radius:2px;background:var(--surface);min-width:0}
+.snip-h{display:grid;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.snip-h h3{font-size:1.1rem}
+.snip-h p{color:var(--ink-2);font-size:.9rem}
+.snip-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.snip-file{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 16px;border-bottom:1px solid var(--line);font:400 .74rem var(--font-mono);color:var(--ink-2)}
+pre.code{margin:0;padding:14px 16px;overflow-x:auto;background:var(--code-bg);font:400 .8rem/1.55 var(--font-mono);tab-size:4;color:var(--ink)}
+pre.code code{font:inherit}
+.tk-k{color:var(--tk-kw)}.tk-s{color:var(--tk-str)}.tk-c{color:var(--tk-com);font-style:italic}.tk-n{color:var(--tk-num)}.tk-f{color:var(--tk-fn)}
+
+/* resume */
+.cv{display:grid;gap:26px;max-width:880px;padding-bottom:20px}
+.cv-head{display:grid;gap:8px}
+.cv-head h1{font-size:clamp(2rem,5vw,2.9rem)}
+.cv-title{font:600 1.15rem var(--font-display);color:var(--accent)}
+.cv-contact{display:flex;gap:6px 18px;flex-wrap:wrap;font:400 .82rem var(--font-mono);color:var(--ink-2)}
+.cv-note{border:1px dashed var(--ink-2);padding:12px 14px;background:var(--surface);font-size:.9rem;color:var(--ink-2);max-width:70ch}
+.cv-sec{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 24px;padding-top:20px;border-top:1px solid var(--line)}
+@media (max-width:640px){.cv-sec{grid-template-columns:minmax(0,1fr)}}
+.cv-sec>h2{font:500 .72rem var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);padding-top:4px}
+.cv-body{display:grid;gap:18px;min-width:0}
+.cv-item{display:grid;gap:3px}
+.cv-row{display:flex;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;align-items:baseline}
+.cv-row h3{font:600 1.02rem var(--font-body)}
+.cv-dates{font:400 .78rem var(--font-mono);color:var(--ink-2)}
+.cv-org{color:var(--ink-2);font-size:.92rem}
+.cv ul{margin:6px 0 0;padding-left:18px;display:grid;gap:4px}
+.cv a{overflow-wrap:anywhere}
+.cv-skills{display:grid;gap:12px}
+.cv-skills h3{font:500 .78rem var(--font-mono);color:var(--ink-2);margin-bottom:6px}
+mark.ph-text{background:var(--warn-bg);color:var(--ink);padding:0 3px;border-radius:2px}
+
+/* phone: nav gets its own full-width row so every page is visible */
+@media (max-width:560px){
+  .top .wrap{flex-wrap:wrap;gap:6px 12px;padding-block:8px}
+  .brand{order:1;flex:1}
+  .tbtn{order:2}
+  .nav{order:3;flex:0 0 100%;overflow-x:visible}
+  .nav a{padding:6px 8px}
+  #tool-landsat .fields,#tool-slope .fields{grid-template-columns:minmax(0,1fr)}
+  .sheet,.tool{scroll-margin-top:96px}
+}
+.cv{padding-top:28px}
+
+</style>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#home">Environmental GIS</a>
+    <nav class="nav" aria-label="Pages" id="nav">
+      <a href="#home">Home</a><a href="#maps">Maps</a><a href="#code">Code</a><a href="#tools">GIS Tools</a><a href="#resume">Resume</a>
+    </nav>
+    <button class="tbtn" id="theme-btn" type="button" aria-label="Switch between light and dark theme">Theme</button>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- HOME -->
+<section class="page" id="page-home">
+  <div class="hero">
+    <h1>Environmental data, mapped and tested.</h1>
+    <p class="lede">Five GIS projects on heat, water, fire, coastline and air, built on public datasets. Each has a live demo of the method, the code behind it, and browser tools for everyday GIS work.</p>
+    <canvas class="band" id="band" aria-hidden="true"></canvas>
+  </div>
+  <div class="tiles" id="home-tiles">
+    <a class="tile" href="#maps"><span class="kicker">5 projects</span><h3>Maps</h3><p>Finished maps with the data sources and workflow for each project, plus a demo you can adjust and watch respond.</p><span class="go">Open maps →</span></a>
+    <a class="tile" href="#code"><span class="kicker"><span data-count="code">13</span> snippets</span><h3>Code</h3><p>Python and SQL for the methods in each project. Each snippet says whether it was run or only syntax-checked.</p><span class="go">Open code →</span></a>
+    <a class="tile" href="#tools"><span class="kicker">8 tools</span><h3>GIS Tools</h3><p>Convert coordinates to UTM, measure distance and bearing, compute spectral indices, inspect a GeoJSON file.</p><span class="go">Open tools →</span></a>
+    <a class="tile" href="#resume"><span class="kicker">Background</span><h3>Resume</h3><p>Experience, skills and education.</p><span class="go">Open resume →</span></a>
+  </div>
+  <h2 class="sec-title">Projects</h2>
+  <ul class="index" id="home-index"></ul>
+</section>
+
+<!-- MAPS -->
+<section class="page" id="page-maps" hidden>
+  <div class="ph">
+    <h1>Maps</h1>
+    <p>Each project pairs a finished map with the public data behind it and a demo of the method. Maps appear in the slots as they are completed. Demos run on synthetic data in your browser and show how each method behaves. They are not measurements of a real place.</p>
+  </div>
+  <ul class="index" id="index"></ul>
+  <div id="sheets"></div>
+</section>
+
+<!-- CODE -->
+<section class="page" id="page-code" hidden>
+  <div class="ph">
+    <h1>Code</h1>
+    <p>Python and SQL for the methods used in the projects. Filter by project, copy a snippet, and adapt it to your own data.</p>
+  </div>
+  <div class="chips" id="code-filter" role="group" aria-label="Filter snippets by project"></div>
+  <div class="key" aria-label="What the badges mean">
+    <span><span class="pill live"><i></i>Run</span> executed on synthetic data</span>
+    <span><span class="pill"><i></i>Partly run</span> logic executed, file reading not</span>
+    <span><span class="pill outline"><i></i>Not run</span> syntax-checked only</span>
+  </div>
+  <div class="snips" id="snips"></div>
+</section>
+
+<!-- TOOLS -->
+<section class="page" id="page-tools" hidden>
+  <div class="ph">
+    <h1>GIS Tools</h1>
+    <p>Small utilities that run in your browser. Nothing is uploaded. Coordinate and distance results were checked against pyproj.</p>
+  </div>
+  <div class="chips" id="tool-jump" role="group" aria-label="Jump to a tool"></div>
+  <div class="tgrid">
+
+    <section class="tool" id="tool-coords">
+      <h3>Coordinate converter</h3>
+      <p class="desc">Latitude and longitude to UTM, Web Mercator and degrees-minutes-seconds, or UTM back to latitude and longitude. WGS84.</p>
+      <div class="field"><label for="co-mode">Input</label>
+        <select id="co-mode" class="in"><option value="ll">Latitude / longitude</option><option value="utm">UTM</option></select></div>
+      <div class="fields" id="co-ll">
+        <div class="field"><label for="co-lat">Latitude</label><input class="in" id="co-lat" type="text" inputmode="text" autocomplete="off" value="39.9526"></div>
+        <div class="field"><label for="co-lon">Longitude</label><input class="in" id="co-lon" type="text" inputmode="text" autocomplete="off" value="-75.1652"></div>
+      </div>
+      <div class="fields" id="co-utm" hidden>
+        <div class="field"><label for="co-zone">Zone (1 to 60)</label><input class="in" id="co-zone" type="text" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="co-hem">Hemisphere</label><select id="co-hem" class="in"><option value="N">North</option><option value="S">South</option></select></div>
+        <div class="field"><label for="co-e">Easting (m)</label><input class="in" id="co-e" type="text" inputmode="decimal" autocomplete="off"></div>
+        <div class="field"><label for="co-n">Northing (m)</label><input class="in" id="co-n" type="text" inputmode="decimal" autocomplete="off"></div>
+      </div>
+      <p class="msg" id="co-msg" role="status"></p>
+      <dl class="res" id="co-res"></dl>
+      <p class="desc">Accepts 40.7128, 40°42'46"N or 40 42 46 N. Zones follow the standard 6° grid and ignore the Norway and Svalbard exceptions.</p>
+    </section>
+
+    <section class="tool" id="tool-distance">
+      <h3>Distance and bearing</h3>
+      <p class="desc">Great-circle distance, initial bearing and midpoint between two points.</p>
+      <div class="fields">
+        <div class="field"><label for="di-lat1">Start latitude</label><input class="in" id="di-lat1" type="text" autocomplete="off" value="39.9526"></div>
+        <div class="field"><label for="di-lon1">Start longitude</label><input class="in" id="di-lon1" type="text" autocomplete="off" value="-75.1652"></div>
+        <div class="field"><label for="di-lat2">End latitude</label><input class="in" id="di-lat2" type="text" autocomplete="off" value="40.4406"></div>
+        <div class="field"><label for="di-lon2">End longitude</label><input class="in" id="di-lon2" type="text" autocomplete="off" value="-79.9959"></div>
+      </div>
+      <p class="msg" id="di-msg" role="status"></p>
+      <dl class="res" id="di-res"></dl>
+      <p class="desc">Uses a sphere with a 6,371 km radius, which is within about 0.5% of ellipsoidal distance.</p>
+    </section>
+
+    <section class="tool" id="tool-index">
+      <h3>Spectral index calculator</h3>
+      <p class="desc">Enter surface reflectance values (0 to 1) for Landsat 8/9 bands.</p>
+      <div class="field"><label for="ix-kind">Index</label><select id="ix-kind" class="in"></select></div>
+      <div class="fields">
+        <div class="field"><label for="ix-a" id="ix-a-l">Band A</label><input class="in" id="ix-a" type="text" inputmode="decimal" autocomplete="off" value="0.38"></div>
+        <div class="field"><label for="ix-b" id="ix-b-l">Band B</label><input class="in" id="ix-b" type="text" inputmode="decimal" autocomplete="off" value="0.09"></div>
+      </div>
+      <p class="formula" id="ix-formula"></p>
+      <p class="msg" id="ix-msg" role="status"></p>
+      <dl class="res" id="ix-res"></dl>
+    </section>
+
+    <section class="tool" id="tool-landsat">
+      <h3>Landsat Collection 2 scaling</h3>
+      <p class="desc">Convert a raw Level 2 pixel value (DN) to reflectance or surface temperature.</p>
+      <div class="fields">
+        <div class="field"><label for="ls-kind">Band type</label><select id="ls-kind" class="in"><option value="st">Surface temp (ST_B10)</option><option value="sr">Reflectance (SR_B1-B7)</option></select></div>
+        <div class="field"><label for="ls-dn">Pixel value (DN)</label><input class="in" id="ls-dn" type="text" inputmode="numeric" autocomplete="off" value="44000"></div>
+      </div>
+      <p class="formula" id="ls-formula"></p>
+      <p class="msg" id="ls-msg" role="status"></p>
+      <dl class="res" id="ls-res"></dl>
+    </section>
+
+    <section class="tool" id="tool-scale">
+      <h3>Map scale</h3>
+      <p class="desc">Work out ground distance from a printed scale, or the scale from a measured distance.</p>
+      <div class="fields three">
+        <div class="field"><label for="sc-den">Scale 1 :</label><input class="in" id="sc-den" type="text" inputmode="numeric" autocomplete="off" value="24000"></div>
+        <div class="field"><label for="sc-cm">Map distance (cm)</label><input class="in" id="sc-cm" type="text" inputmode="decimal" autocomplete="off" value="5"></div>
+        <div class="field"><label for="sc-dpi">Screen or print dpi</label><input class="in" id="sc-dpi" type="text" inputmode="numeric" autocomplete="off" value="96"></div>
+      </div>
+      <p class="msg" id="sc-msg" role="status"></p>
+      <dl class="res" id="sc-res"></dl>
+      <div class="fields">
+        <div class="field"><label for="sc-g">Ground distance (m)</label><input class="in" id="sc-g" type="text" inputmode="decimal" autocomplete="off" value="1200"></div>
+        <div class="field"><label for="sc-m">Measured on map (cm)</label><input class="in" id="sc-m" type="text" inputmode="decimal" autocomplete="off" value="5"></div>
+      </div>
+      <dl class="res" id="sc-res2"></dl>
+    </section>
+
+    <section class="tool" id="tool-slope">
+      <h3>Slope units</h3>
+      <p class="desc">Convert between degrees, percent grade and rise-to-run.</p>
+      <div class="fields">
+        <div class="field"><label for="sl-kind">Enter slope as</label><select id="sl-kind" class="in"><option value="deg">Degrees</option><option value="pct">Percent grade</option></select></div>
+        <div class="field"><label for="sl-v">Value</label><input class="in" id="sl-v" type="text" inputmode="decimal" autocomplete="off" value="25"></div>
+      </div>
+      <p class="msg" id="sl-msg" role="status"></p>
+      <dl class="res" id="sl-res"></dl>
+    </section>
+
+    <section class="tool wide" id="tool-geojson">
+      <h3>GeoJSON inspector</h3>
+      <p class="desc">Paste GeoJSON or open a file. It checks the structure, counts features and vertices, measures area and length, and draws a preview.</p>
+      <div class="gj">
+        <div class="gj-side">
+          <div class="field"><label for="gj-text">GeoJSON</label><textarea class="in" id="gj-text" spellcheck="false" autocomplete="off"></textarea></div>
+          <div class="btns">
+            <button class="btn" id="gj-run" type="button">Inspect</button>
+            <button class="btn ghost" id="gj-sample" type="button">Load sample</button>
+            <button class="btn ghost" id="gj-clear" type="button">Clear</button>
+          </div>
+          <div class="field"><label for="gj-file">Or open a .geojson or .json file</label><input class="in" id="gj-file" type="file" accept=".geojson,.json,application/geo+json,application/json"></div>
+        </div>
+        <div class="gj-side">
+          <div><span class="pill" id="gj-pill">Waiting for input</span></div>
+          <p class="msg" id="gj-msg" role="status"></p>
+          <dl class="res" id="gj-res"></dl>
+          <div id="gj-prev"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool wide" id="tool-crs">
+      <h3>Coordinate reference systems</h3>
+      <p class="desc">The ones that come up most in US environmental work.</p>
+      <div class="tablewrap"><table class="t">
+        <thead><tr><th>EPSG</th><th>Name</th><th>Type</th><th>Use it for</th></tr></thead>
+        <tbody>
+          <tr><td>4326</td><td>WGS 84</td><td>Geographic, degrees</td><td>GPS points, GeoJSON, exchanging data. Not for measuring distance or area.</td></tr>
+          <tr><td>4269</td><td>NAD83</td><td>Geographic, degrees</td><td>Many US federal datasets, including Census boundaries.</td></tr>
+          <tr><td>3857</td><td>WGS 84 / Pseudo-Mercator</td><td>Projected, metres</td><td>Web map tiles. It stretches areas away from the equator, so do not measure with it.</td></tr>
+          <tr><td>5070</td><td>NAD83 / Conus Albers</td><td>Projected, metres, equal-area</td><td>Area and zonal statistics across the lower 48 states.</td></tr>
+          <tr><td>326zz / 327zz</td><td>WGS 84 / UTM zone zz N or S</td><td>Projected, metres</td><td>Distance work inside one 6° zone. Landsat scenes are delivered in UTM.</td></tr>
+          <tr><td>269zz</td><td>NAD83 / UTM zone zz N</td><td>Projected, metres</td><td>US local analysis, zones 1N to 23N.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+  </div>
+</section>
+
+<!-- RESUME -->
+<section class="page" id="page-resume" hidden>
+  <div class="cv" id="cv"></div>
+</section>
+
+<footer class="foot">
+  <p>Built with public data from USGS, NOAA, EPA, the US Census Bureau and NASA. Each project lists its sources.</p>
+</footer>
+</main>
+
+<script>
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+function valueNoise(w,h,seed,scale,oct){
+  const out=new Float32Array(w*h);let amp=1,tot=0;
+  for(let o=0;o<oct;o++){
+    const r=mulberry32(seed+o*977),s=scale/(1<<o);
+    const gw=Math.ceil(w/s)+2,gh=Math.ceil(h/s)+2,g=new Float32Array(gw*gh);
+    for(let i=0;i<g.length;i++)g[i]=r();
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      const fx=x/s,fy=y/s,ix=Math.floor(fx),iy=Math.floor(fy);
+      let tx=fx-ix,ty=fy-iy;tx=tx*tx*(3-2*tx);ty=ty*ty*(3-2*ty);
+      const a=g[iy*gw+ix],b=g[iy*gw+ix+1],c=g[(iy+1)*gw+ix],d=g[(iy+1)*gw+ix+1];
+      out[y*w+x]+=amp*((a*(1-tx)+b*tx)*(1-ty)+(c*(1-tx)+d*tx)*ty);
+    }
+    tot+=amp;amp/=2;
+  }
+  let mn=1e9,mx=-1e9;
+  for(let i=0;i<out.length;i++){out[i]/=tot;if(out[i]<mn)mn=out[i];if(out[i]>mx)mx=out[i];}
+  for(let i=0;i<out.length;i++)out[i]=(out[i]-mn)/(mx-mn||1);
+  return out;
+}
+function quantile(arr,q){const s=Float32Array.from(arr).sort();return s[Math.min(s.length-1,Math.floor(q*s.length))];}
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+function normCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function median(a){const s=a.slice().sort((p,q)=>p-q),m=s.length;return m%2?s[(m-1)/2]:(s[m/2-1]+s[m/2])/2;}
+function mannKendall(y){
+  const n=y.length;let S=0;const slopes=[];
+  for(let i=0;i<n-1;i++)for(let j=i+1;j<n;j++){S+=Math.sign(y[j]-y[i]);slopes.push((y[j]-y[i])/(j-i));}
+  const counts={};y.forEach(v=>{counts[v]=(counts[v]||0)+1;});
+  let tie=0;for(const k in counts){const t=counts[k];if(t>1)tie+=t*(t-1)*(2*t+5);}
+  const varS=(n*(n-1)*(2*n+5)-tie)/18;
+  const z=S>0?(S-1)/Math.sqrt(varS):S<0?(S+1)/Math.sqrt(varS):0;
+  const p=2*(1-normCdf(Math.abs(z)));
+  const sen=median(slopes);
+  const intercept=median(y.map((v,i)=>v-sen*i));
+  return {S,z,p,sen,intercept};
+}
+function linreg(xs,ys){
+  const n=xs.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=xs[i];my+=ys[i];}mx/=n;my/=n;
+  let sxx=0,sxy=0,syy=0;for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;sxx+=dx*dx;sxy+=dx*dy;syy+=dy*dy;}
+  const slope=sxy/(sxx||1),r=sxy/Math.sqrt((sxx*syy)||1);
+  return {slope,intercept:my-slope*mx,r,r2:r*r};
+}
+function idw(mons,x,y,power){
+  let num=0,den=0;
+  for(const m of mons){const d2=(m.x-x)*(m.x-x)+(m.y-y)*(m.y-y);if(d2<1e-9)return m.v;const w=1/Math.pow(d2,power/2);num+=w*m.v;den+=w;}
+  return num/den;
+}
+function hex2rgb(h){const n=parseInt(h.slice(1),16);return [n>>16,(n>>8)&255,n&255];}
+function makeRamp(hexes){const st=hexes.map(hex2rgb);return function(t){t=clamp(t,0,1);const f=t*(st.length-1),i=Math.min(st.length-2,Math.floor(f)),u=f-i,a=st[i],b=st[i+1];
+  return [a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]+(b[2]-a[2])*u];};}
+
+</script>
+<script>
+/* Finished maps. Add one entry per project once its map is ready, then republish:
+   heat: { src: "heat-map.png", alt: "Land surface temperature by census tract", caption: "Landsat 9, 14 Aug 2025" }
+   Project ids: heat, water, fire, coast, air. */
+window.MAPS_DATA={};
+
+</script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+
+/* Finished maps: add {src, alt, caption} per project id and republish. */
+const MAPS=window.MAPS_DATA||{};
+
+const HEAT=['#f8efcf','#f5c06a','#e8722f','#b3261e','#5a0f16'];
+const TERRAIN=['#e3ebd8','#bcd1a8','#93b58a','#6f9570','#4c6f5c'];
+const PMC=['#f4ecf3','#dcaed0','#b45fa3','#7b2c6d','#3f1239'];
+const INCC=['#e6f2ef','#abd7ce','#62b5a8','#228c7e','#0c514a'];
+const BI=[['#e8e8e8','#ace4e4','#5ac8c8'],['#dfb0d6','#a5add3','#5698b9'],['#be64ac','#8c62aa','#3b4994']];
+const INK=[14,29,26];
+
+const PROJECTS=[
+ {id:'heat',title:'Urban Heat Island Analysis',q:'Which neighborhoods run hottest on a summer afternoon, and how much of that follows pavement?',
+  tags:'Raster analysis · Zonal statistics · Regression',
+  sheet:[['Imagery','Landsat 8/9 Collection 2 Level 2, surface temperature band'],['Land cover','NLCD land cover and percent impervious'],['Boundaries','Census TIGER/Line tracts'],['Suggested CRS','EPSG:5070 (NAD83 / Conus Albers)'],['Tools','QGIS or ArcGIS Pro, Python (pandas, seaborn)']],
+  links:[['USGS EarthExplorer','https://earthexplorer.usgs.gov/'],['MRLC (NLCD)','https://www.mrlc.gov/'],['Census TIGER/Line','https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html']],
+  steps:['Choose a mid-size city and a clear summer Landsat scene with under 10% cloud.','Clip the Level 2 surface temperature band to the study area and convert Kelvin to °F.','Clip NLCD land cover and impervious surface to the same extent and resample to match.','Run zonal statistics for mean temperature by land cover class and by census tract.','Plot percent impervious against mean temperature per tract and fit a line.','Map temperature by tract and as a continuous raster with a sequential ramp.']},
+ {id:'water',title:'Watershed Water Quality Trends',q:'Is nutrient pollution rising or falling at each monitoring station, and is the change statistically real?',
+  tags:'Time series · Mann-Kendall test · Data cleaning',
+  sheet:[['Monitoring data','USGS/EPA Water Quality Portal station results'],['Watershed','NHDPlus HUC boundaries, StreamStats delineation'],['Context','EPA WATERS GeoViewer impaired waters'],['Suggested CRS','EPSG:4326 for station import, local UTM for distances'],['Tools','QGIS, Python (pandas, pymannkendall)']],
+  links:[['Water Quality Portal','https://www.waterqualitydata.us/'],['StreamStats','https://streamstats.usgs.gov/ss/'],['NHDPlus products','https://www.usgs.gov/national-hydrography/access-national-hydrography-products'],['EPA WATERS GeoViewer','https://www.epa.gov/waterdata/waters-geoviewer']],
+  steps:['Pick a watershed with 10+ years of data and several stations.','Query the Water Quality Portal for one parameter and export CSV.','Standardize units, flag non-detects and remove duplicate records.','Import stations as points and clip them to the watershed boundary.','Run a Mann-Kendall test and Sen slope for each station.','Symbolize stations by trend direction and significance, then overlay NLCD land use.']},
+ {id:'fire',title:'Wildfire Risk and Burn History',q:'Where do slope, aspect and fuel combine into the highest fire risk, and does the burn record agree?',
+  tags:'Weighted overlay · Terrain analysis · Validation',
+  sheet:[['Burn history','MTBS perimeters and severity, 1984 to present'],['Fuels','LANDFIRE fuel models and canopy cover'],['Terrain','USGS 3DEP elevation, derived slope and aspect'],['Suggested CRS','EPSG:5070 or the local UTM zone'],['Tools','QGIS or ArcGIS Pro, optional Python for batch reclassification']],
+  links:[['MTBS','https://www.mtbs.gov/'],['NIFC Open Data','https://data-nifc.opendata.arcgis.com/'],['LANDFIRE','https://landfire.gov/'],['USGS National Map downloader','https://apps.nationalmap.gov/downloader/']],
+  steps:['Choose a fire-prone region with a decade or more of MTBS perimeters.','Derive slope and aspect rasters from a 30 m DEM.','Clip LANDFIRE fuel data and reclassify slope, aspect and fuel to a shared 1 to 5 scale.','Combine the layers with weights taken from fire science literature, and cite them.','Overlay the burn perimeters on the composite and measure how much burned area falls in the top risk class.','Write up where the model misses and why.']},
+ {id:'coast',title:'Coastal Erosion and Sea Level Rise',q:'Which parts of the coast are most exposed as water rises, and how many structures sit in the path?',
+  tags:'DEM analysis · Scenario modeling · Change detection',
+  sheet:[['Elevation','NOAA Digital Coast lidar-derived DEM'],['Shorelines','Historical shoreline vectors for change rate'],['Scenarios','NOAA Sea Level Rise Viewer layers, 0 to 10 ft'],['Suggested CRS','Local UTM zone or state plane, vertical in NAVD88'],['Tools','QGIS (raster calculator), DSAS if using ArcGIS, Python (rasterio)']],
+  links:[['NOAA Digital Coast','https://coast.noaa.gov/digitalcoast/'],['NOAA Sea Level Rise Viewer','https://coast.noaa.gov/slr/'],['USGS National Map downloader','https://apps.nationalmap.gov/downloader/']],
+  steps:['Download a coastal DEM and confirm its vertical datum.','Classify cells at or below each scenario height (1, 3, 6 ft).','Keep only water that connects to the ocean, so isolated low spots are not counted.','Join county building footprints and count structures inside each scenario.','Optionally compute shoreline change rates along transects from historical shorelines.','Present the scenarios as side by side small multiples.']},
+ {id:'air',title:'Air Quality and Environmental Justice',q:'Who lives where the air is worst, and how sure can we be with so few monitors?',
+  tags:'Spatial interpolation · Spatial joins · Bivariate mapping',
+  sheet:[['Air quality','EPA AirData monitor readings (PM2.5, ozone)'],['Screening data','EJScreen archive (EPA removed it from its own site)'],['Demographics','Census ACS at block group level'],['Suggested CRS','EPSG:5070 or the local UTM zone'],['Tools','QGIS (IDW, bivariate plugin), Python (pandas, scipy, cenpy)']],
+  links:[['EPA AirData','https://www.epa.gov/outdoor-air-quality-data'],['EJScreen archive (Yale mirror)','https://energyhistory.yale.edu/ejscreen-mirror'],['Census data','https://data.census.gov/'],['Census TIGER/Line','https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html']],
+  steps:['Pick a metro area with several EPA monitors and varied neighborhoods.','Download monitor data and ACS income and race tables for block groups.','Join demographics to boundaries on GEOID.','Interpolate monitor readings with IDW or kriging and summarize by block group.','Correlate exposure with income and compare the lowest and highest income groups.','Map exposure and income together, state results as correlation, and note monitor density limits.']}
+];
+
+/* ---------- shared helpers ---------- */
+function paint(cv,W,H,fn){cv.width=W;cv.height=H;const g=cv.getContext('2d');const im=g.createImageData(W,H);
+  for(let i=0;i<W*H;i++){const c=fn(i);im.data[4*i]=c[0];im.data[4*i+1]=c[1];im.data[4*i+2]=c[2];im.data[4*i+3]=255;}g.putImageData(im,0,0);}
+function legendBar(stops,lo,hi,cap){return '<div><div class="legend"><span>'+lo+'</span><i style="background:linear-gradient(90deg,'+stops.join(',')+')"></i><span>'+hi+'</span></div><div class="legend-cap">'+cap+'</div></div>';}
+function swatch(c,l){return '<span><b style="background:'+c+'"></b>'+l+'</span>';}
+function cellAt(cv,e,W,H){const r=cv.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H);
+  return (x>=0&&y>=0&&x<W&&y<H)?{x:x,y:y}:null;}
+function hover(cv,W,H,out,fmt){
+  out.textContent=out.dataset.idle;
+  cv.addEventListener('pointermove',function(e){const c=cellAt(cv,e,W,H);out.textContent=c?fmt(c.x,c.y):out.dataset.idle;});
+  cv.addEventListener('pointerleave',function(){out.textContent=out.dataset.idle;});
+}
+function frame(W,H,m,xd,yd,xt,yt,xlab,ylab,xf,yf){
+  const sx=v=>m.l+(v-xd[0])/(xd[1]-xd[0])*(W-m.l-m.r);
+  const sy=v=>H-m.b-(v-yd[0])/(yd[1]-yd[0])*(H-m.t-m.b);
+  let s='';
+  yt.forEach(v=>{s+='<line class="grid" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+sy(v)+'" y2="'+sy(v)+'"/><text class="tk" x="'+(m.l-6)+'" y="'+(sy(v)+3.5)+'" text-anchor="end">'+yf(v)+'</text>';});
+  xt.forEach(v=>{s+='<line class="axis" x1="'+sx(v)+'" x2="'+sx(v)+'" y1="'+(H-m.b)+'" y2="'+(H-m.b+4)+'"/><text class="tk" x="'+sx(v)+'" y="'+(H-m.b+16)+'" text-anchor="middle">'+xf(v)+'</text>';});
+  s+='<line class="axis" x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+(H-m.b)+'" y2="'+(H-m.b)+'"/>';
+  s+='<text class="lab" x="'+((m.l+W-m.r)/2)+'" y="'+(H-3)+'" text-anchor="middle">'+xlab+'</text>';
+  s+='<text class="lab" transform="translate(11 '+((m.t+H-m.b)/2)+') rotate(-90)" text-anchor="middle">'+ylab+'</text>';
+  return {sx:sx,sy:sy,svg:s};
+}
+
+/* ---------- page shell ---------- */
+function renderShell(){
+  $('index').innerHTML=PROJECTS.map(p=>'<li><a href="#'+p.id+'"><span class="t">'+p.title+'</span><span class="m">'+p.tags+'</span><span class="pills"><span class="pill live"><i></i>Demo live</span></span></a></li>').join('');
+  $('sheets').innerHTML=PROJECTS.map(p=>{
+    const m=MAPS[p.id];
+    const slot=m?('<img src="'+m.src+'" alt="'+(m.alt||p.title)+'">'+(m.caption?'<figcaption>'+m.caption+'</figcaption>':'')):
+      '<div class="mapslot-empty"><span class="pill outline">Final map in progress</span><p>The finished map for this project will appear here. The demo below shows how the analysis behaves.</p></div>';
+    return '<section class="sheet" id="'+p.id+'"><div class="sheet-head"><div class="pills"><span class="pill live"><i></i>Demo live</span>'+(m?'<span class="pill"><i></i>Map complete</span>':'<span class="pill outline">Map in progress</span>')+'</div><h2>'+p.title+'</h2><p class="q">'+p.q+'</p></div>'+
+    '<div class="sheet-body"><figure class="mapslot">'+slot+'</figure>'+
+    '<div class="block"><dl class="tb">'+p.sheet.map(r=>'<div><dt>'+r[0]+'</dt><dd>'+r[1]+'</dd></div>').join('')+'<div><dt>Data links</dt><dd>'+p.links.map(l=>'<a href="'+l[1]+'">'+l[0]+'</a>').join('')+'</dd></div></dl></div></div>'+
+    '<div class="demo" id="demo-'+p.id+'"></div>'+
+    '<details class="flow"><summary>Workflow</summary><div class="in"><ol>'+p.steps.map(s=>'<li>'+s+'</li>').join('')+'</ol></div></details></section>';
+  }).join('');
+}
+
+/* ---------- 1. heat ---------- */
+function initHeat(){
+  const root=$('demo-heat'),W=72,H=48,N=W*H,ramp=makeRamp(HEAT);
+  const n1=valueNoise(W,H,11,14,3),n2=valueNoise(W,H,23,9,3),n3=valueNoise(W,H,37,5,2);
+  const imp=new Float32Array(N),can=new Float32Array(N),lst0=new Float32Array(N),lst=new Float32Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=y*W+x,d=Math.hypot((x-W*0.42)/W,(y-H*0.5)/H)*2.2,core=Math.max(0,1-d);
+    imp[i]=clamp(0.15+0.65*core+0.35*(n1[i]-0.5)+0.1*(n3[i]-0.5),0,1);
+    can[i]=clamp(0.55*(1-imp[i])+0.35*(n2[i]-0.5)+0.1,0,1);
+    lst0[i]=76+20*imp[i]-10*can[i]+3*(n3[i]-0.5);
+  }
+  let lo=1e9,hi=-1e9,sum0=0;for(let i=0;i<N;i++){if(lst0[i]<lo)lo=lst0[i];if(lst0[i]>hi)hi=lst0[i];sum0+=lst0[i];}
+  const mean0=sum0/N,order=Array.from({length:N},(_,i)=>i).sort((a,b)=>imp[b]-imp[a]);
+  root.innerHTML='<div class="demo-title"><h3>Demo: greening the hottest blocks</h3><span>Synthetic 72 × 48 raster</span></div>'+
+  '<div class="demo-grid"><div class="demo-main"><canvas id="heat-cv" role="img" aria-label="Synthetic land surface temperature raster"></canvas>'+
+  legendBar(HEAT,lo.toFixed(0)+' °F',hi.toFixed(0)+' °F','Land surface temperature, fixed to the baseline range')+
+  '<p class="readout" id="heat-hover" data-idle="Hover the map to read a cell."></p></div>'+
+  '<div class="demo-side"><div class="ctl"><label for="heat-pct">Add canopy to the most paved cells <output id="heat-pct-o" for="heat-pct">0%</output></label><input id="heat-pct" type="range" min="0" max="40" step="1" value="0"></div>'+
+  '<dl class="stats"><div><dt>Mean temp</dt><dd id="heat-mean"></dd></div><div><dt>Change</dt><dd id="heat-delta"></dd></div><div><dt>Hottest cell</dt><dd id="heat-max"></dd></div><div><dt>Impervious vs temp</dt><dd id="heat-r2"></dd></div></dl>'+
+  '<figure class="chart"><svg id="heat-sc" viewBox="0 0 360 240" role="img" aria-label="Scatter plot of percent impervious surface against land surface temperature"></svg><figcaption>Each dot is a raster cell (every 9th shown). Orange line: least squares fit on all cells.</figcaption></figure></div></div>'+
+  '<p class="note">Assumption: canopy cools a converted cell by 5 to 10 °F, more where pavement is denser. Real values come from your own before and after imagery.</p>';
+  const cv=$('heat-cv'),sl=$('heat-pct'),ho=$('heat-hover');
+  function update(){
+    const pct=+sl.value;$('heat-pct-o').textContent=pct+'%';
+    const k=Math.round(N*pct/100);lst.set(lst0);
+    for(let j=0;j<k;j++){const i=order[j];lst[i]=lst0[i]-(5+5*imp[i]);}
+    paint(cv,W,H,i=>ramp((lst[i]-lo)/(hi-lo)));
+    let s=0,mx=-1e9;for(let i=0;i<N;i++){s+=lst[i];if(lst[i]>mx)mx=lst[i];}
+    const mean=s/N;
+    $('heat-mean').textContent=mean.toFixed(1)+' °F';
+    $('heat-delta').textContent=(mean-mean0>=0?'+':'−')+Math.abs(mean-mean0).toFixed(1)+' °F';
+    $('heat-max').textContent=mx.toFixed(1)+' °F';
+    const xs=Array.from(imp,v=>v*100),fit=linreg(xs,Array.from(lst));
+    $('heat-r2').innerHTML=fit.r2.toFixed(2)+' <small>R²</small>';
+    const f=frame(360,240,{l:46,r:10,t:10,b:36},[0,100],[lo-2,hi+2],[0,25,50,75,100],[Math.round(lo),Math.round((lo+hi)/2),Math.round(hi)],'Impervious surface (%)','Temperature (°F)',v=>v,v=>v);
+    let pts='';for(let i=0;i<N;i+=9)pts+='<circle cx="'+f.sx(xs[i]).toFixed(1)+'" cy="'+f.sy(lst[i]).toFixed(1)+'" r="2.4" fill="var(--water)" fill-opacity="0.55"/>';
+    $('heat-sc').innerHTML=f.svg+pts+'<line x1="'+f.sx(0)+'" y1="'+f.sy(fit.intercept)+'" x2="'+f.sx(100)+'" y2="'+f.sy(fit.intercept+fit.slope*100)+'" stroke="var(--heat)" stroke-width="2"/>';
+  }
+  sl.addEventListener('input',update);
+  hover(cv,W,H,ho,(x,y)=>{const i=y*W+x;return 'Cell '+x+','+y+' · impervious '+Math.round(imp[i]*100)+'% · '+lst[i].toFixed(1)+' °F';});
+  update();
+}
+
+/* ---------- 2. water ---------- */
+function initWater(){
+  const root=$('demo-water'),years=Array.from({length:15},(_,i)=>2010+i);
+  const STN=[
+    {name:'Headwaters, row crops',base:1,slope:0.035,noise:0.09,seed:3},
+    {name:'Below treatment plant',base:1.3,slope:-0.03,noise:0.08,seed:5},
+    {name:'Forested reach',base:0.55,slope:0.0,noise:0.12,seed:9},
+    {name:'Suburban outfall',base:0.9,slope:0.012,noise:0.2,seed:14}];
+  const PAR={tp:{label:'Total phosphorus',unit:'mg/L',mult:0.09,dec:3},no3:{label:'Nitrate',unit:'mg/L',mult:3.2,dec:2},tur:{label:'Turbidity',unit:'NTU',mult:12,dec:1}};
+  function series(si,pk){const s=STN[si],p=PAR[pk],r=mulberry32(s.seed*101+pk.length*7+si);
+    return years.map((yr,i)=>{const v=p.mult*s.base*(1+s.slope*i)*(1+s.noise*gauss(r));return Math.max(p.mult*0.05,+v.toFixed(p.dec+1));});}
+  root.innerHTML='<div class="demo-title"><h3>Demo: is the trend real?</h3><span>15 annual medians, Mann-Kendall at α = 0.05</span></div>'+
+  '<div class="demo-grid"><div class="demo-main"><figure class="chart"><svg id="water-ch" viewBox="0 0 420 270" role="img" aria-label="Annual median water quality values with Sen slope trend line"></svg>'+
+  '<figcaption>Blue: annual median at the station. Orange dashed: Sen slope trend line.</figcaption></figure>'+
+  '<p class="readout" id="water-hover" data-idle="Hover the chart to read a year."></p></div>'+
+  '<div class="demo-side"><div class="ctl"><label for="water-stn">Station</label><select id="water-stn">'+STN.map((s,i)=>'<option value="'+i+'">'+s.name+'</option>').join('')+'</select></div>'+
+  '<div class="ctl"><label for="water-par">Parameter</label><select id="water-par">'+Object.keys(PAR).map(k=>'<option value="'+k+'">'+PAR[k].label+' ('+PAR[k].unit+')</option>').join('')+'</select></div>'+
+  '<label class="check"><input id="water-sen" type="checkbox" checked><span>Show Sen slope line</span></label>'+
+  '<div><span class="pill" id="water-verdict"></span></div>'+
+  '<dl class="stats"><div><dt>Sen slope</dt><dd id="water-slope"></dd></div><div><dt>p-value</dt><dd id="water-p"></dd></div><div><dt>Z statistic</dt><dd id="water-z"></dd></div><div><dt>Years of data</dt><dd>15</dd></div></dl></div></div>'+
+  '<p class="note">Mann-Kendall tests whether values tend to rise or fall without assuming a straight line. Sen slope is the median of all pairwise slopes, so single outlier years barely move it.</p>';
+  const svg=$('water-ch'),ho=$('water-hover');let cur=null;
+  function update(){
+    const si=+$('water-stn').value,pk=$('water-par').value,p=PAR[pk],y=series(si,pk),mk=mannKendall(y);
+    const ymax=Math.max.apply(null,y)*1.2,f=frame(420,270,{l:52,r:12,t:12,b:38},[2010,2024],[0,ymax],[2010,2014,2018,2022],[0,ymax*0.25,ymax*0.5,ymax*0.75,ymax],'Year',p.label+' ('+p.unit+')',v=>v,v=>v.toFixed(p.dec>2?2:p.dec>1?1:0===p.dec?0:1));
+    let path='',dots='';y.forEach((v,i)=>{path+=(i?'L':'M')+f.sx(years[i]).toFixed(1)+' '+f.sy(v).toFixed(1);dots+='<circle cx="'+f.sx(years[i]).toFixed(1)+'" cy="'+f.sy(v).toFixed(1)+'" r="3.4" fill="var(--water)"/>';});
+    let sen='';if($('water-sen').checked){const a=mk.intercept,b=mk.sen;sen='<line x1="'+f.sx(2010)+'" y1="'+f.sy(a)+'" x2="'+f.sx(2024)+'" y2="'+f.sy(a+b*14)+'" stroke="var(--heat)" stroke-width="2" stroke-dasharray="6 4"/>';}
+    svg.innerHTML=f.svg+'<path d="'+path+'" fill="none" stroke="var(--water)" stroke-width="2"/>'+dots+sen;
+    cur={y:y,f:f,p:p};
+    const sig=mk.p<0.05,up=mk.sen>0,v=$('water-verdict');
+    v.className='pill '+(sig?(up?'warn':'live'):'');
+    v.textContent=sig?(up?'↑ Significant increase':'↓ Significant decrease'):(mk.p<0.1?'→ Weak signal, not significant':'→ No significant trend');
+    $('water-slope').innerHTML=(mk.sen>=0?'+':'−')+Math.abs(mk.sen).toFixed(p.dec+1)+' <small>'+p.unit+'/yr</small>';
+    $('water-p').textContent=mk.p<0.001?'< 0.001':mk.p.toFixed(3);
+    $('water-z').textContent=mk.z.toFixed(2);
+  }
+  ['water-stn','water-par','water-sen'].forEach(id=>$(id).addEventListener('input',update));
+  svg.addEventListener('pointermove',function(e){if(!cur)return;const r=svg.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*420;
+    let best=0,bd=1e9;years.forEach((yr,i)=>{const d=Math.abs(cur.f.sx(yr)-x);if(d<bd){bd=d;best=i;}});
+    ho.textContent=years[best]+' · '+cur.y[best].toFixed(cur.p.dec)+' '+cur.p.unit;});
+  svg.addEventListener('pointerleave',function(){ho.textContent=ho.dataset.idle;});
+  ho.textContent=ho.dataset.idle;
+  update();
+}
+
+/* ---------- 3. fire ---------- */
+function initFire(){
+  const root=$('demo-fire'),W=72,H=48,N=W*H,ramp=makeRamp(HEAT);
+  const E=valueNoise(W,H,51,20,3),gy=new Float32Array(N),mag=new Float32Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,xm=Math.max(0,x-1),xp=Math.min(W-1,x+1),ym=Math.max(0,y-1),yp=Math.min(H-1,y+1);
+    const dx=E[y*W+xp]-E[y*W+xm],dy=E[yp*W+x]-E[ym*W+x];gy[i]=dy;mag[i]=Math.hypot(dx,dy);}
+  const p98=quantile(mag,0.98)||1,gp=quantile(Array.from(gy,Math.abs),0.98)||1;
+  const slopeS=new Float32Array(N),aspS=new Float32Array(N),fuelS=new Float32Array(N),hidden=new Float32Array(N);
+  const nf=valueNoise(W,H,61,9,3),nh=valueNoise(W,H,71,6,2);
+  for(let i=0;i<N;i++){slopeS[i]=Math.min(1,mag[i]/p98);aspS[i]=clamp(0.5-gy[i]/(2*gp),0,1);const t=clamp((nf[i]-0.3)/0.45,0,1);fuelS[i]=t*t*(3-2*t);
+    hidden[i]=0.2*slopeS[i]+0.15*aspS[i]+0.65*fuelS[i]+0.3*(nh[i]-0.5);}
+  const thr=quantile(hidden,0.87);let burned=new Uint8Array(N);for(let i=0;i<N;i++)burned[i]=hidden[i]>=thr?1:0;
+  const sm=new Uint8Array(N);for(let y=0;y<H;y++)for(let x=0;x<W;x++){let c=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&yy>=0&&xx<W&&yy<H)c+=burned[yy*W+xx];}sm[y*W+x]=c>=5?1:0;}
+  burned=sm;let bTot=0;for(let i=0;i<N;i++)bTot+=burned[i];
+  const edge=new Uint8Array(N);for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!burned[i])continue;
+    if(x===0||y===0||x===W-1||y===H-1||!burned[i-1]||!burned[i+1]||!burned[i-W]||!burned[i+W])edge[i]=1;}
+  root.innerHTML='<div class="demo-title"><h3>Demo: weighted overlay</h3><span>Synthetic 72 × 48 raster</span></div>'+
+  '<div class="demo-grid"><div class="demo-main"><canvas id="fire-cv" role="img" aria-label="Synthetic composite wildfire risk raster with burn perimeters"></canvas>'+
+  legendBar(HEAT,'Low risk','High risk','Composite risk score')+
+  '<div class="swatches">'+swatch('#1e63d6','Simulated burn perimeter')+'</div>'+
+  '<p class="readout" id="fire-hover" data-idle="Hover the map to read a cell."></p></div>'+
+  '<div class="demo-side">'+
+  [['ws','Slope',3],['wa','South-facing aspect',2],['wf','Fuel load',5]].map(a=>'<div class="ctl"><label for="fire-'+a[0]+'">'+a[1]+' weight <output id="fire-'+a[0]+'-o" for="fire-'+a[0]+'"></output></label><input id="fire-'+a[0]+'" type="range" min="0" max="10" step="1" value="'+a[2]+'"></div>').join('')+
+  '<label class="check"><input id="fire-burn" type="checkbox" checked><span>Show simulated burn perimeters</span></label>'+
+  '<div><span class="pill" id="fire-verdict"></span></div>'+
+  '<dl class="stats"><div><dt>Burned area in top 20% risk</dt><dd id="fire-cap"></dd></div><div><dt>Versus chance</dt><dd id="fire-lift"></dd></div></dl></div></div>'+
+  '<p class="note">The burn history is simulated from a hidden mix of slope, aspect and fuel plus noise. Move the weights and watch how well your composite recovers it. Real projects validate against MTBS perimeters the same way.</p>';
+  const cv=$('fire-cv'),ho=$('fire-hover');let comp=new Float32Array(N);
+  function update(){
+    const w=['ws','wa','wf'].map(k=>+$('fire-'+k).value),sum=w[0]+w[1]+w[2],n=sum?w.map(v=>v/sum):[1/3,1/3,1/3];
+    ['ws','wa','wf'].forEach((k,j)=>{$('fire-'+k+'-o').textContent=Math.round(n[j]*100)+'%';});
+    let lo=1e9,hi=-1e9;for(let i=0;i<N;i++){comp[i]=n[0]*slopeS[i]+n[1]*aspS[i]+n[2]*fuelS[i];if(comp[i]<lo)lo=comp[i];if(comp[i]>hi)hi=comp[i];}
+    const show=$('fire-burn').checked;
+    paint(cv,W,H,i=>(show&&edge[i])?[30,99,214]:ramp((comp[i]-lo)/((hi-lo)||1)));
+    const t20=quantile(comp,0.8);let inTop=0;for(let i=0;i<N;i++)if(burned[i]&&comp[i]>=t20)inTop++;
+    const cap=inTop/bTot,lift=cap/0.2;
+    $('fire-cap').textContent=Math.round(cap*100)+'%';
+    $('fire-lift').innerHTML=lift.toFixed(1)+'× <small>20% = chance</small>';
+    const v=$('fire-verdict');v.className='pill '+(lift>=2?'live':lift<1.3?'warn':'');
+    v.textContent=lift>=2?'✓ Strong agreement with burn history':lift>=1.3?'~ Moderate agreement':'✕ Weak agreement';
+    comp._lo=lo;comp._hi=hi;
+  }
+  ['fire-ws','fire-wa','fire-wf','fire-burn'].forEach(id=>$(id).addEventListener('input',update));
+  hover(cv,W,H,ho,(x,y)=>{const i=y*W+x;return 'Cell '+x+','+y+' · slope '+slopeS[i].toFixed(2)+' · aspect '+aspS[i].toFixed(2)+' · fuel '+fuelS[i].toFixed(2)+' · risk '+comp[i].toFixed(2)+(burned[i]?' · burned':'');});
+  update();
+}
+
+/* ---------- 4. coast ---------- */
+function initCoast(){
+  const root=$('demo-coast'),W=80,H=50,N=W*H,ramp=makeRamp(TERRAIN);
+  const nz=valueNoise(W,H,81,16,3),E=new Float32Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;
+    const inlet=x<W*0.7?9*Math.exp(-Math.pow((y-H*0.55)/3,2))*(1-x/(W*0.7)):0;
+    const pond=9*Math.exp(-((x-52)*(x-52)+(y-14)*(y-14))/18);
+    E[i]=-4+x/W*24+(nz[i]-0.5)*8-inlet-pond-8*Math.exp(-x/5);}
+  function inund(slr,conn){const m=new Uint8Array(N);
+    if(!conn){for(let i=0;i<N;i++)m[i]=E[i]<=slr?1:0;return m;}
+    const q=[];for(let y=0;y<H;y++){const i=y*W;if(E[i]<=slr){m[i]=1;q.push(i);}}
+    while(q.length){const i=q.pop(),x=i%W,y=(i/W)|0,nb=[];if(x>0)nb.push(i-1);if(x<W-1)nb.push(i+1);if(y>0)nb.push(i-W);if(y<H-1)nb.push(i+W);
+      for(const j of nb)if(!m[j]&&E[j]<=slr){m[j]=1;q.push(j);}}
+    return m;}
+  const base=inund(0,true),rr=mulberry32(99),bld=new Uint8Array(N);let nb=0,tries=0;
+  while(nb<140&&tries<40000){tries++;const x=Math.floor(rr()*W),y=Math.floor(rr()*H),i=y*W+x;
+    if(bld[i]||E[i]<0.6||E[i]>14||base[i])continue;if(rr()<Math.exp(-E[i]/5)){bld[i]=1;nb++;}}
+  const total=nb;
+  root.innerHTML='<div class="demo-title"><h3>Demo: how much rise is too much?</h3><span>Synthetic 80 × 50 DEM, 30 m cells</span></div>'+
+  '<div class="demo-grid"><div class="demo-main"><canvas id="coast-cv" role="img" aria-label="Synthetic coastal elevation model with sea level rise inundation"></canvas>'+
+  legendBar(TERRAIN,'0 ft','22 ft','Land elevation above current sea level')+
+  '<div class="swatches">'+swatch('#1d4f91','Open water now')+swatch('#5aa2e8','Flooded at this rise')+swatch('#0e1d1a','Structure')+swatch('#e8672a','Flooded structure')+'</div>'+
+  '<p class="readout" id="coast-hover" data-idle="Hover the map to read a cell."></p></div>'+
+  '<div class="demo-side"><div class="ctl"><label for="coast-slr">Sea level rise <output id="coast-slr-o" for="coast-slr"></output></label><input id="coast-slr" type="range" min="0" max="10" step="0.5" value="3"></div>'+
+  '<label class="check"><input id="coast-conn" type="checkbox" checked><span>Only count water connected to the ocean</span></label>'+
+  '<dl class="stats"><div><dt>Land lost</dt><dd id="coast-area"></dd></div><div><dt>Structures flooded</dt><dd id="coast-str"></dd></div></dl>'+
+  '<figure class="chart"><svg id="coast-bars" viewBox="0 0 360 220" role="img" aria-label="Bar chart of structures flooded at each foot of sea level rise"></svg><figcaption>Structures flooded at each whole foot of rise. Orange bar: the foot nearest your setting.</figcaption></figure></div></div>'+
+  '<p class="note">Turn off the connectivity option to see a plain bathtub model, which also floods the isolated inland pond. Connected-only is the standard for sea level rise mapping.</p>';
+  const cv=$('coast-cv'),sl=$('coast-slr'),cn=$('coast-conn'),ho=$('coast-hover');let mask=base;
+  function draw(){
+    const slr=+sl.value,conn=cn.checked;mask=inund(slr,conn);
+    paint(cv,W,H,i=>{const flooded=mask[i]&&!base[i];
+      if(bld[i])return flooded?[232,103,42]:INK;
+      if(base[i])return [29,79,145];
+      if(flooded)return [90,162,232];
+      return ramp(clamp(E[i],0,22)/22);});
+    let area=0,st=0;for(let i=0;i<N;i++){if(mask[i]&&!base[i])area++;if(bld[i]&&mask[i])st++;}
+    $('coast-slr-o').textContent='+'+slr.toFixed(1)+' ft';
+    $('coast-area').innerHTML=(area*0.0009).toFixed(2)+' <small>km²</small>';
+    $('coast-str').innerHTML=st+' <small>of '+total+'</small>';
+    const f=frame(360,220,{l:40,r:10,t:10,b:36},[-0.6,10.6],[0,total],[0,2,4,6,8,10],[0,Math.round(total/2),total],'Sea level rise (ft)','Structures flooded',v=>v,v=>v);
+    let bars='';const bw=(f.sx(1)-f.sx(0))*0.7;
+    for(let k=0;k<=10;k++){const m=inund(k,conn);let c=0;for(let i=0;i<N;i++)if(bld[i]&&m[i])c++;
+      const hl=Math.round(slr)===k,h=Math.max(0,f.sy(0)-f.sy(c));
+      bars+='<rect x="'+(f.sx(k)-bw/2).toFixed(1)+'" y="'+f.sy(c).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="2" fill="'+(hl?'var(--heat)':'var(--water)')+'"><title>'+k+' ft: '+c+' structures</title></rect>';}
+    $('coast-bars').innerHTML=f.svg+bars;
+  }
+  sl.addEventListener('input',draw);cn.addEventListener('input',draw);
+  hover(cv,W,H,ho,(x,y)=>{const i=y*W+x;return E[i]<=0?('Cell '+x+','+y+' · below sea level ('+E[i].toFixed(1)+' ft)'):('Cell '+x+','+y+' · '+E[i].toFixed(1)+' ft above sea level · floods at +'+Math.max(0,E[i]).toFixed(1)+' ft'+(bld[i]?' · structure':''));});
+  draw();
+}
+
+/* ---------- 5. air ---------- */
+function initAir(){
+  const root=$('demo-air'),W=64,H=44,N=W*H,pmR=makeRamp(PMC),incR=makeRamp(INCC);
+  const n1=valueNoise(W,H,91,10,3),n2=valueNoise(W,H,97,8,3),truth=new Float32Array(N),inc=new Float32Array(N);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,d=Math.abs(y-H*(0.62-0.12*x/W)),b=(x-0.25*W)*(x-0.25*W)+(y-0.3*H)*(y-0.3*H);
+    truth[i]=6+7*Math.exp(-Math.pow(d/5,2))+6*Math.exp(-b/(2*64))+3*(n1[i]-0.5);
+    inc[i]=Math.round(88-30*Math.exp(-Math.pow(d/8,2))-22*Math.exp(-b/(2*121))+28*(n2[i]-0.5));}
+  const start=[[8,8],[30,10],[52,9],[14,30],[34,26],[50,34],[22,40]],rm=mulberry32(5);
+  let mons=start.map(p=>({x:p[0],y:p[1],v:truth[p[1]*W+p[0]]+0.5*gauss(rm)}));
+  const est=new Float32Array(N);
+  root.innerHTML='<div class="demo-title"><h3>Demo: interpolate, then compare</h3><span>Synthetic 64 × 44 grid of block groups</span></div>'+
+  '<div class="demo-grid"><div class="demo-main"><canvas id="air-cv" role="img" aria-label="Synthetic interpolated PM2.5 surface and median income"></canvas>'+
+  '<div id="air-legend"></div><p class="readout" id="air-hover" data-idle="Hover the map to read a cell. Click to add a monitor."></p></div>'+
+  '<div class="demo-side"><div class="ctl"><label for="air-view">Map layer</label><select id="air-view"><option value="pm">Estimated PM2.5 (IDW)</option><option value="inc">Median household income</option><option value="bi">Both, bivariate</option></select></div>'+
+  '<div class="ctl"><label for="air-pow">IDW power <output id="air-pow-o" for="air-pow"></output></label><input id="air-pow" type="range" min="1" max="5" step="0.5" value="2"></div>'+
+  '<div class="btns"><button class="btn" id="air-add" type="button">Add random monitor</button><button class="btn ghost" id="air-reset" type="button">Reset monitors</button></div>'+
+  '<dl class="stats"><div><dt>Monitors</dt><dd id="air-n"></dd></div><div><dt>Correlation, PM vs income</dt><dd id="air-r"></dd></div>'+
+  '<div><dt>PM2.5, lowest income third</dt><dd id="air-lo"></dd></div><div><dt>PM2.5, highest income third</dt><dd id="air-hi"></dd></div>'+
+  '<div><dt>Error vs hidden truth</dt><dd id="air-rmse"></dd></div></dl></div></div>'+
+  '<p class="note">This shows correlation, not cause. Estimates between monitors are modeled, and the error figure compares them with a hidden true surface that real analyses never have. More monitors usually shrink that error.</p>';
+  const cv=$('air-cv'),ho=$('air-hover');let lo=0,hi=1,t1=0,t2=0,i1=0,i2=0;
+  function update(){
+    const pw=+$('air-pow').value,view=$('air-view').value;$('air-pow-o').textContent=pw.toFixed(1);
+    let se=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;est[i]=idw(mons,x,y,pw);se+=(est[i]-truth[i])*(est[i]-truth[i]);}
+    lo=1e9;hi=-1e9;for(let i=0;i<N;i++){if(est[i]<lo)lo=est[i];if(est[i]>hi)hi=est[i];}
+    t1=quantile(est,0.333);t2=quantile(est,0.667);i1=quantile(inc,0.333);i2=quantile(inc,0.667);
+    const cls=(v,a,b)=>v<a?0:v<b?1:2;
+    paint(cv,W,H,i=>{let c;
+      if(view==='pm')c=pmR((est[i]-lo)/(hi-lo||1));
+      else if(view==='inc')c=incR((inc[i]-40)/70);
+      else c=hex2rgb(BI[cls(est[i],t1,t2)][cls(inc[i],i1,i2)]);return c;});
+    const g=cv.getContext('2d');g.fillStyle='rgb('+INK.join(',')+')';
+    mons.forEach(m=>{[[0,0],[1,0],[-1,0],[0,1],[0,-1]].forEach(o=>g.fillRect(m.x+o[0],m.y+o[1],1,1));});
+    const L=$('air-legend');
+    if(view==='pm')L.innerHTML=legendBar(PMC,lo.toFixed(1),hi.toFixed(1),'Estimated PM2.5, µg/m³ (dark plus signs are monitors)');
+    else if(view==='inc')L.innerHTML=legendBar(INCC,'$40k','$110k','Median household income (dark plus signs are monitors)');
+    else{let cells='';for(let p=2;p>=0;p--)for(let q=0;q<3;q++)cells+='<b style="background:'+BI[p][q]+'"></b>';
+      L.innerHTML='<div class="bi"><div class="g">'+cells+'</div><div><small>↑ higher PM2.5</small><br><small>→ higher income</small></div></div><div class="legend-cap">Terciles of each variable. Dark pink: high PM2.5, low income.</div>';}
+    const r=linreg(Array.from(est),Array.from(inc)).r;
+    const idx=Array.from({length:N},(_,i)=>i),low=idx.filter(i=>inc[i]<i1),high=idx.filter(i=>inc[i]>=i2);
+    const mean=a=>a.reduce((s,i)=>s+est[i],0)/a.length;
+    $('air-n').textContent=mons.length;
+    $('air-r').textContent=r.toFixed(2);
+    $('air-lo').innerHTML=mean(low).toFixed(1)+' <small>µg/m³</small>';
+    $('air-hi').innerHTML=mean(high).toFixed(1)+' <small>µg/m³</small>';
+    $('air-rmse').innerHTML=Math.sqrt(se/N).toFixed(2)+' <small>µg/m³</small>';
+  }
+  function addAt(x,y){if(mons.length>=16)return;mons.push({x:x,y:y,v:truth[y*W+x]+0.5*gauss(rm)});update();}
+  cv.addEventListener('click',function(e){const c=cellAt(cv,e,W,H);if(c)addAt(c.x,c.y);});
+  $('air-add').addEventListener('click',function(){addAt(Math.floor(rm()*W),Math.floor(rm()*H));});
+  $('air-reset').addEventListener('click',function(){mons=start.map(p=>({x:p[0],y:p[1],v:truth[p[1]*W+p[0]]+0.5*gauss(rm)}));update();});
+  $('air-view').addEventListener('input',update);$('air-pow').addEventListener('input',update);
+  hover(cv,W,H,ho,(x,y)=>{const i=y*W+x;return 'Cell '+x+','+y+' · est. PM2.5 '+est[i].toFixed(1)+' µg/m³ · income $'+inc[i]+'k';});
+  update();
+}
+
+/* ---------- hero band + theme ---------- */
+function initBand(){const W=240,H=28,nz=valueNoise(W,H,7,22,3),r=makeRamp(INCC);paint($('band'),W,H,i=>r(0.15+0.85*nz[i]));}
+function initTheme(){
+  $('theme-btn').addEventListener('click',function(){
+    const root=document.documentElement,cur=root.dataset.theme||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    root.dataset.theme=cur==='dark'?'light':'dark';});
+}
+
+window.GIS={PROJECTS:PROJECTS,initBand:initBand,_done:false,
+  initDemos:function(){if(this._done)return;this._done=true;renderShell();initHeat();initWater();initFire();initCoast();initAir();}};
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function copy(text,btn){
+  function done(ok){var o=btn.dataset.label||btn.textContent;btn.dataset.label=o;btn.textContent=ok?'Copied':'Select and copy';setTimeout(function(){btn.textContent=o;},1400);}
+  function fallback(){
+    var ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}document.body.removeChild(ta);done(ok);
+  }
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){done(true);},fallback);return;}
+  }catch(e){}
+  fallback();
+}
+window.GISUI={esc:esc,copy:copy};
+})();
+
+</script>
+<script>
+(function(root){
+'use strict';
+var RAD=Math.PI/180, WGS={a:6378137,f:1/298.257223563};
+function r(v,d){var p=Math.pow(10,d);return Math.round(v*p)/p;}
+
+/* parse "40.7128", "-74.006", "40°42'46.1\"N", "40 42 46.1 S" */
+function parseCoord(str,isLat){
+  if(str==null)return NaN;
+  var s=String(str).trim().toUpperCase();if(!s)return NaN;
+  var hem=null;
+  var m=s.match(/[NSEW]/g);
+  if(m){if(m.length>1)return NaN;hem=m[0];}
+  var nums=s.replace(/[NSEW]/g,' ').match(/-?\d+(?:\.\d+)?/g);
+  if(!nums||nums.length>3)return NaN;
+  var neg=/^\s*-/.test(s)||nums[0].charAt(0)==='-';
+  var deg=Math.abs(parseFloat(nums[0])),mi=nums[1]?Math.abs(parseFloat(nums[1])):0,se=nums[2]?Math.abs(parseFloat(nums[2])):0;
+  if(mi>=60||se>=60)return NaN;
+  var v=deg+mi/60+se/3600;
+  if(hem){
+    if(isLat&&(hem==='E'||hem==='W'))return NaN;
+    if(!isLat&&(hem==='N'||hem==='S'))return NaN;
+    if(hem==='S'||hem==='W')neg=true;
+  }
+  if(neg)v=-v;
+  var lim=isLat?90:180;
+  return Math.abs(v)<=lim?v:NaN;
+}
+function toDMS(v,isLat){
+  var hem=isLat?(v<0?'S':'N'):(v<0?'W':'E'),a=Math.abs(v);
+  var d=Math.floor(a),mf=(a-d)*60,mi=Math.floor(mf),s=(mf-mi)*60;
+  s=r(s,2);if(s>=60){s=0;mi+=1;}if(mi>=60){mi=0;d+=1;}
+  return d+'°'+('0'+mi).slice(-2)+'′'+(s<10?'0':'')+s.toFixed(2)+'″ '+hem;
+}
+
+var BANDS='CDEFGHJKLMNPQRSTUVWX';
+function zoneOf(lat,lon){
+  var z=Math.floor((lon+180)/6)+1;
+  if(z>60)z=60;if(z<1)z=1;
+  return z;
+}
+function bandOf(lat){
+  if(lat<-80||lat>84)return '';
+  var i=Math.floor((lat+80)/8);if(i>19)i=19;return BANDS.charAt(i);
+}
+function krugerCoefs(){
+  var n=WGS.f/(2-WGS.f),n2=n*n,n3=n2*n,n4=n3*n;
+  return {
+    n:n,
+    A:WGS.a/(1+n)*(1+n2/4+n4/64),
+    alpha:[0.5*n-2/3*n2+5/16*n3+41/180*n4,13/48*n2-3/5*n3+557/1440*n4,61/240*n3-103/140*n4,49561/161280*n4],
+    beta:[0.5*n-2/3*n2+37/96*n3-1/360*n4,1/48*n2+1/15*n3-437/1440*n4,17/480*n3-37/840*n4,4397/161280*n4],
+    delta:[2*n-2/3*n2-2*n3+116/45*n4,7/3*n2-8/5*n3-227/45*n4,56/15*n3-136/35*n4,4279/630*n4]
+  };
+}
+var K=krugerCoefs(),K0=0.9996;
+function toUTM(lat,lon,forceZone){
+  if(!(lat>=-80&&lat<=84))return null;
+  var zone=forceZone||zoneOf(lat,lon),lon0=((zone-1)*6-180+3)*RAD;
+  var phi=lat*RAD,lam=lon*RAD-lon0;
+  var n=K.n,c=2*Math.sqrt(n)/(1+n);
+  var t=Math.sinh(Math.atanh(Math.sin(phi))-c*Math.atanh(c*Math.sin(phi)));
+  var xi1=Math.atan2(t,Math.cos(lam)),eta1=Math.atanh(Math.sin(lam)/Math.sqrt(1+t*t));
+  var xi=xi1,eta=eta1;
+  for(var j=1;j<=4;j++){
+    xi+=K.alpha[j-1]*Math.sin(2*j*xi1)*Math.cosh(2*j*eta1);
+    eta+=K.alpha[j-1]*Math.cos(2*j*xi1)*Math.sinh(2*j*eta1);
+  }
+  var E=500000+K0*K.A*eta,N=K0*K.A*xi,south=lat<0;
+  if(south)N+=10000000;
+  return {zone:zone,band:bandOf(lat),hemisphere:south?'S':'N',easting:E,northing:N};
+}
+function fromUTM(zone,hemisphere,E,N){
+  var lon0=((zone-1)*6-180+3)*RAD;
+  var north=hemisphere==='S'?N-10000000:N;
+  var xi=north/(K0*K.A),eta=(E-500000)/(K0*K.A);
+  var xi1=xi,eta1=eta;
+  for(var j=1;j<=4;j++){
+    xi1-=K.beta[j-1]*Math.sin(2*j*xi)*Math.cosh(2*j*eta);
+    eta1-=K.beta[j-1]*Math.cos(2*j*xi)*Math.sinh(2*j*eta);
+  }
+  var chi=Math.asin(Math.sin(xi1)/Math.cosh(eta1)),phi=chi;
+  for(var k=1;k<=4;k++)phi+=K.delta[k-1]*Math.sin(2*k*chi);
+  var lam=lon0+Math.atan2(Math.sinh(eta1),Math.cos(xi1));
+  return {lat:phi/RAD,lon:lam/RAD};
+}
+function epsgUTM(zone,hemisphere){
+  return {wgs84:(hemisphere==='S'?32700:32600)+zone,nad83:(hemisphere==='N'&&zone>=1&&zone<=23)?26900+zone:null};
+}
+function toWebMercator(lat,lon){
+  if(Math.abs(lat)>85.0511287798)return null;
+  var R=6378137;
+  return {x:R*lon*RAD,y:R*Math.log(Math.tan(Math.PI/4+lat*RAD/2))};
+}
+var EARTH=6371008.8;
+function haversine(lat1,lon1,lat2,lon2){
+  var p1=lat1*RAD,p2=lat2*RAD,dp=(lat2-lat1)*RAD,dl=(lon2-lon1)*RAD;
+  var a=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return 2*EARTH*Math.asin(Math.min(1,Math.sqrt(a)));
+}
+function bearing(lat1,lon1,lat2,lon2){
+  var p1=lat1*RAD,p2=lat2*RAD,dl=(lon2-lon1)*RAD;
+  var y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  return (Math.atan2(y,x)/RAD+360)%360;
+}
+function midpoint(lat1,lon1,lat2,lon2){
+  var p1=lat1*RAD,l1=lon1*RAD,p2=lat2*RAD,dl=(lon2-lon1)*RAD;
+  var bx=Math.cos(p2)*Math.cos(dl),by=Math.cos(p2)*Math.sin(dl);
+  var p3=Math.atan2(Math.sin(p1)+Math.sin(p2),Math.sqrt((Math.cos(p1)+bx)*(Math.cos(p1)+bx)+by*by));
+  var l3=l1+Math.atan2(by,Math.cos(p1)+bx);
+  return {lat:p3/RAD,lon:((l3/RAD+540)%360)-180};
+}
+function compass(deg){var d=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return d[Math.round(deg/22.5)%16];}
+
+/* spherical polygon ring area (m2), Chamberlain-Duquette; signed */
+function ringArea(ring){
+  var R=6378137,s=0,n=ring.length;
+  if(n<4)return 0;
+  for(var i=0;i<n-1;i++){
+    var a=ring[i],b=ring[i+1];
+    s+=(b[0]-a[0])*RAD*(2+Math.sin(a[1]*RAD)+Math.sin(b[1]*RAD));
+  }
+  return s*R*R/2;
+}
+function polygonArea(rings){
+  var a=Math.abs(ringArea(rings[0]));
+  for(var i=1;i<rings.length;i++)a-=Math.abs(ringArea(rings[i]));
+  return Math.max(0,a);
+}
+function lineLength(coords){var L=0;for(var i=0;i<coords.length-1;i++)L+=haversine(coords[i][1],coords[i][0],coords[i+1][1],coords[i+1][0]);return L;}
+
+/* walk any GeoJSON object and collect stats */
+function inspectGeoJSON(text){
+  var out={ok:false,errors:[],warnings:[],features:0,types:{},vertices:0,bbox:null,areaM2:0,lengthM:0,shapes:[],nullGeoms:0};
+  var obj;
+  try{obj=JSON.parse(text);}catch(e){out.errors.push('Not valid JSON: '+e.message);return out;}
+  if(!obj||typeof obj!=='object'||typeof obj.type!=='string'){out.errors.push('Missing a "type" member. GeoJSON objects start with a type such as FeatureCollection.');return out;}
+  var bb=[Infinity,Infinity,-Infinity,-Infinity],badRange=false,swapped=false;
+  function pos(p){
+    if(!Array.isArray(p)||p.length<2||typeof p[0]!=='number'||typeof p[1]!=='number'){out.errors.push('A coordinate is not a pair of numbers.');return;}
+    out.vertices++;
+    if(Math.abs(p[0])>180||Math.abs(p[1])>90){if(Math.abs(p[0])<=90&&Math.abs(p[1])<=180)swapped=true;else badRange=true;}
+    if(p[0]<bb[0])bb[0]=p[0];if(p[1]<bb[1])bb[1]=p[1];if(p[0]>bb[2])bb[2]=p[0];if(p[1]>bb[3])bb[3]=p[1];
+  }
+  function geom(g){
+    if(!g){out.nullGeoms++;return;}
+    out.types[g.type]=(out.types[g.type]||0)+1;
+    var c=g.coordinates;
+    switch(g.type){
+      case 'Point':pos(c);out.shapes.push({t:'pt',c:[c]});break;
+      case 'MultiPoint':c.forEach(pos);out.shapes.push({t:'pt',c:c});break;
+      case 'LineString':c.forEach(pos);out.lengthM+=lineLength(c);out.shapes.push({t:'ln',c:c});break;
+      case 'MultiLineString':c.forEach(function(l){l.forEach(pos);out.lengthM+=lineLength(l);out.shapes.push({t:'ln',c:l});});break;
+      case 'Polygon':c.forEach(function(rg){rg.forEach(pos);});out.areaM2+=polygonArea(c);out.shapes.push({t:'pg',c:c});checkRings(c);break;
+      case 'MultiPolygon':c.forEach(function(pl){pl.forEach(function(rg){rg.forEach(pos);});out.areaM2+=polygonArea(pl);out.shapes.push({t:'pg',c:pl});checkRings(pl);});break;
+      case 'GeometryCollection':(g.geometries||[]).forEach(geom);break;
+      default:out.errors.push('Unknown geometry type "'+g.type+'".');
+    }
+  }
+  function checkRings(rings){rings.forEach(function(rg){if(rg.length<4)out.errors.push('A polygon ring has fewer than 4 positions.');else{var a=rg[0],b=rg[rg.length-1];if(a[0]!==b[0]||a[1]!==b[1])out.errors.push('A polygon ring is not closed (first and last position differ).');}});}
+  try{
+    if(obj.type==='FeatureCollection'){
+      if(!Array.isArray(obj.features)){out.errors.push('FeatureCollection has no "features" array.');return out;}
+      obj.features.forEach(function(f){out.features++;geom(f&&f.geometry);});
+    }else if(obj.type==='Feature'){out.features=1;geom(obj.geometry);}
+    else geom(obj);
+  }catch(e){out.errors.push('Could not read the geometry: '+e.message);}
+  if(badRange)out.warnings.push('Some coordinates fall outside longitude ±180 / latitude ±90. The data looks projected (metres or feet), so area and length are not shown.');
+  else if(swapped)out.warnings.push('Some coordinates look like latitude, longitude. GeoJSON order is longitude, latitude.');
+  if(out.nullGeoms)out.warnings.push(out.nullGeoms+' feature(s) have no geometry.');
+  if(out.vertices&&isFinite(bb[0]))out.bbox=bb;
+  if(badRange||swapped){out.areaM2=null;out.lengthM=null;}
+  out.ok=out.errors.length===0;
+  return out;
+}
+
+/* simple unit helpers */
+function slopeFromDegrees(d){return {deg:d,pct:Math.tan(d*RAD)*100,run:d>0?1/Math.tan(d*RAD):Infinity};}
+function slopeFromPercent(p){var d=Math.atan(p/100)/RAD;return {deg:d,pct:p,run:p>0?100/p:Infinity};}
+var INDEX={
+  ndvi:{name:'NDVI',a:'NIR (B5)',b:'Red (B4)',f:function(a,b){return (a-b)/(a+b);}},
+  ndwi:{name:'NDWI',a:'Green (B3)',b:'NIR (B5)',f:function(a,b){return (a-b)/(a+b);}},
+  nbr:{name:'NBR',a:'NIR (B5)',b:'SWIR2 (B7)',f:function(a,b){return (a-b)/(a+b);}},
+  ndbi:{name:'NDBI',a:'SWIR1 (B6)',b:'NIR (B5)',f:function(a,b){return (a-b)/(a+b);}}
+};
+function spectralIndex(key,a,b){
+  var d=INDEX[key];if(!d)return NaN;
+  if(a+b===0)return NaN;
+  return d.f(a,b);
+}
+function landsatReflectance(dn){return dn*0.0000275-0.2;}
+function landsatSurfaceTemp(dn){var k=dn*0.00341802+149.0;return {k:k,c:k-273.15,f:(k-273.15)*9/5+32};}
+
+var api={parseCoord:parseCoord,toDMS:toDMS,toUTM:toUTM,fromUTM:fromUTM,epsgUTM:epsgUTM,toWebMercator:toWebMercator,
+  haversine:haversine,bearing:bearing,midpoint:midpoint,compass:compass,ringArea:ringArea,polygonArea:polygonArea,lineLength:lineLength,
+  inspectGeoJSON:inspectGeoJSON,slopeFromDegrees:slopeFromDegrees,slopeFromPercent:slopeFromPercent,spectralIndex:spectralIndex,INDEX:INDEX,
+  landsatReflectance:landsatReflectance,landsatSurfaceTemp:landsatSurfaceTemp,round:r};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.GISMath=api;
+})(typeof window!=='undefined'?window:this);
+
+</script>
+<script>
+window.SNIPPETS=[{"file": "landsat_st.py", "lang": "python", "project": "heat", "title": "Landsat surface temperature to °F", "desc": "Applies the Collection 2 Level 2 scale factor and offset, treats 0 as fill, and converts Kelvin to Fahrenheit.", "status": "partial", "statusText": "Conversion run, file reading not run", "code": "import numpy as np\nimport rasterio\n\n\ndef dn_to_fahrenheit(dn):\n    \"\"\"Landsat Collection 2 Level 2 surface temperature: DN -> degrees F.\"\"\"\n    dn = np.asarray(dn, dtype=\"float64\")\n    dn = np.where(dn == 0, np.nan, dn)        # 0 is the fill value\n    kelvin = dn * 0.00341802 + 149.0          # official scale factor and offset\n    return (kelvin - 273.15) * 9 / 5 + 32\n\n\ndef read_lst_fahrenheit(path):\n    \"\"\"Read an ST_B10 GeoTIFF and return (temperature array, raster profile).\"\"\"\n    with rasterio.open(path) as src:\n        return dn_to_fahrenheit(src.read(1)), src.profile"}, {"file": "zonal_tracts.py", "lang": "python", "project": "heat", "title": "Mean temperature by census tract", "desc": "Reprojects tracts to the raster CRS, then summarizes the raster inside each tract with rasterstats.", "status": "unrun", "statusText": "Syntax-checked, not run", "code": "import geopandas as gpd\nimport pandas as pd\nimport rasterio\nfrom rasterstats import zonal_stats\n\nraster_path = \"lst_f.tif\"\n\n# zonal_stats does not reproject, so match the tracts to the raster first\nwith rasterio.open(raster_path) as src:\n    tracts = gpd.read_file(\"tracts.gpkg\").to_crs(src.crs)\n\nstats = zonal_stats(tracts, raster_path, stats=[\"mean\", \"max\", \"count\"])\ntracts = tracts.join(pd.DataFrame(stats).add_prefix(\"lst_\"))\n\nprint(tracts[[\"GEOID\", \"lst_mean\", \"lst_max\"]].sort_values(\"lst_mean\").tail())"}, {"file": "impervious_fit.py", "lang": "python", "project": "heat", "title": "Impervious surface vs temperature fit", "desc": "Least squares line through tract-level temperature and percent impervious, returning slope, R² and p-value.", "status": "run", "statusText": "Run on synthetic data", "code": "import pandas as pd\nfrom scipy import stats\n\n\ndef impervious_vs_temperature(df, x=\"pct_impervious\", y=\"lst_mean\"):\n    \"\"\"Least squares fit of tract temperature on percent impervious surface.\"\"\"\n    d = df[[x, y]].dropna()\n    fit = stats.linregress(d[x], d[y])\n    return {\n        \"n\": len(d),\n        \"slope_f_per_pct\": fit.slope,\n        \"r_squared\": fit.rvalue ** 2,\n        \"p_value\": fit.pvalue,\n    }"}, {"file": "clean_wqp.py", "lang": "python", "project": "water", "title": "Clean a Water Quality Portal download", "desc": "Filters one characteristic, converts units to mg/L, flags non-detects, removes duplicates and returns annual medians per station.", "status": "run", "statusText": "Run on synthetic data", "code": "import pandas as pd\n\nTO_MG_L = {\"mg/l\": 1.0, \"ug/l\": 0.001, \"ppm\": 1.0}\n\n\ndef clean_wqp(source, characteristic=\"Phosphorus\"):\n    \"\"\"Tidy a Water Quality Portal result download into annual medians per station.\"\"\"\n    df = pd.read_csv(source, low_memory=False, parse_dates=[\"ActivityStartDate\"])\n    df = df[df[\"CharacteristicName\"] == characteristic].copy()\n\n    df[\"value\"] = pd.to_numeric(df[\"ResultMeasureValue\"], errors=\"coerce\")\n    df[\"unit\"] = df[\"ResultMeasure/MeasureUnitCode\"].str.strip().str.lower()\n    df[\"mg_l\"] = df[\"value\"] * df[\"unit\"].map(TO_MG_L)   # unknown units become NaN\n\n    # Non-detects have no result value; flag them instead of silently dropping\n    flag = df[\"ResultDetectionConditionText\"].fillna(\"\").str.contains(\"not detected\", case=False)\n    df[\"nondetect\"] = flag\n\n    df = df.dropna(subset=[\"mg_l\"])\n    df = df.drop_duplicates([\"MonitoringLocationIdentifier\", \"ActivityStartDate\", \"mg_l\"])\n    df[\"year\"] = df[\"ActivityStartDate\"].dt.year\n\n    return (\n        df.groupby([\"MonitoringLocationIdentifier\", \"year\"], as_index=False)\n          .agg(mg_l=(\"mg_l\", \"median\"), samples=(\"mg_l\", \"size\"))\n          .rename(columns={\"MonitoringLocationIdentifier\": \"site\"})\n    )"}, {"file": "station_trends.py", "lang": "python", "project": "water", "title": "Mann-Kendall trend per station", "desc": "Runs the trend test and Sen slope on each station's annual medians and skips stations with too few years.", "status": "run", "statusText": "Run on synthetic data", "code": "import pandas as pd\nimport pymannkendall as mk\n\n\ndef station_trends(annual, min_years=8, alpha=0.05):\n    \"\"\"Mann-Kendall trend and Sen slope for each station's annual medians.\"\"\"\n    rows = []\n    for site, g in annual.groupby(\"site\"):\n        g = g.sort_values(\"year\")\n        if len(g) < min_years:\n            continue\n        r = mk.original_test(g[\"mg_l\"].to_numpy())\n        rows.append({\n            \"site\": site,\n            \"years\": len(g),\n            \"trend\": r.trend,              # increasing, decreasing, no trend\n            \"p\": r.p,\n            \"sen_slope\": r.slope,          # change per year, same units as the data\n            \"significant\": r.p < alpha,\n        })\n    return pd.DataFrame(rows)"}, {"file": "overlay_fire.py", "lang": "python", "project": "fire", "title": "Slope, aspect and weighted risk score", "desc": "Derives slope and compass aspect from a DEM, reclassifies to 1 to 5, combines with weights, and measures how much burned area lands in the top risk fifth.", "status": "run", "statusText": "Run on synthetic data", "code": "import numpy as np\n\n\ndef slope_aspect(dem, cell):\n    \"\"\"Slope (degrees) and downslope compass aspect (0-360) for a north-up DEM.\"\"\"\n    dz_dy, dz_dx = np.gradient(dem, cell)          # axis 0 runs south, axis 1 east\n    slope = np.degrees(np.arctan(np.hypot(dz_dx, dz_dy)))\n    aspect = np.degrees(np.arctan2(-dz_dx, dz_dy)) % 360\n    return slope, aspect\n\n\ndef score(values, breaks):\n    \"\"\"Reclassify to 1-5 using four break values.\"\"\"\n    return np.digitize(values, breaks) + 1\n\n\ndef risk_score(slope, aspect, fuel, weights=(0.3, 0.2, 0.5)):\n    s = score(slope, [5, 15, 25, 35])\n    south = 1 - np.abs(aspect - 180) / 180          # 1 = due south, 0 = due north\n    a = np.where(slope < 1, 1, score(south, [0.2, 0.4, 0.6, 0.8]))   # flat cells have no aspect\n    f = np.clip(fuel, 1, 5)\n    ws, wa, wf = weights\n    return ws * s + wa * a + wf * f\n\n\ndef burn_capture(risk, burned, top=0.2):\n    \"\"\"Share of burned cells that fall in the highest-risk `top` fraction of the map.\"\"\"\n    cut = np.quantile(risk, 1 - top)\n    return burned[risk >= cut].sum() / burned.sum()"}, {"file": "pyqgis_clip.py", "lang": "python", "project": "fire", "title": "Clip a raster to a study area in QGIS", "desc": "One call to the GDAL clip-by-mask algorithm from the QGIS Python console.", "status": "unrun", "statusText": "Syntax-checked, not run", "code": "# Run in the QGIS Python console\nimport processing\n\nresult = processing.run(\"gdal:cliprasterbymasklayer\", {\n    \"INPUT\": \"/data/landfire_fuel.tif\",\n    \"MASK\": \"/data/study_area.gpkg|layername=boundary\",\n    \"CROP_TO_CUTLINE\": True,\n    \"KEEP_RESOLUTION\": True,\n    \"OUTPUT\": \"/data/fuel_clip.tif\",\n})\nprint(result[\"OUTPUT\"])"}, {"file": "slr_inundation.py", "lang": "python", "project": "coast", "title": "Connected sea level rise inundation", "desc": "Flags low cells connected to the ocean, so isolated inland depressions are not counted, and totals flooded area and structures.", "status": "run", "statusText": "Run on synthetic data", "code": "import numpy as np\nfrom scipy import ndimage\n\n\ndef inundation(dem, level, ocean):\n    \"\"\"Cells at or below `level` that connect to the ocean (4-neighbour).\n\n    dem   : 2D array of elevation, same vertical datum as `level`\n    ocean : boolean array marking cells that are open water today\n    \"\"\"\n    low = dem <= level\n    labels, _ = ndimage.label(low)                  # connected low-lying patches\n    wet = np.unique(labels[low & ocean])\n    wet = wet[wet != 0]\n    return np.isin(labels, wet)\n\n\ndef summarize(mask, cell_m, rows, cols):\n    \"\"\"Flooded area (km2) and number of structures, given building cell indices.\"\"\"\n    area_km2 = mask.sum() * cell_m ** 2 / 1e6\n    structures = int(mask[rows, cols].sum())\n    return area_km2, structures"}, {"file": "sample_buildings.py", "lang": "python", "project": "coast", "title": "Elevation at building footprints", "desc": "Samples a DEM at building centroids and flags structures at or below a sea level rise height.", "status": "unrun", "statusText": "Syntax-checked, not run", "code": "import geopandas as gpd\nimport numpy as np\nimport rasterio\n\nlevel_m = 0.91          # 3 ft in metres, matching the DEM's units\n\nwith rasterio.open(\"dem_navd88_m.tif\") as src:\n    buildings = gpd.read_file(\"footprints.gpkg\").to_crs(src.crs)\n    pts = buildings.geometry.centroid                 # needs a projected CRS\n    coords = [(p.x, p.y) for p in pts]\n    elev = np.array([v[0] for v in src.sample(coords)], dtype=\"float64\")\n\nbuildings[\"elev_m\"] = elev\nbuildings[\"flooded_3ft\"] = elev <= level_m\nprint(buildings[\"flooded_3ft\"].sum(), \"of\", len(buildings), \"structures at or below 3 ft\")"}, {"file": "idw.py", "lang": "python", "project": "air", "title": "Inverse distance weighting", "desc": "Estimates a surface from monitor readings with a distance power you can tune.", "status": "run", "statusText": "Run on synthetic data", "code": "import numpy as np\n\n\ndef idw(xy, values, grid_xy, power=2.0):\n    \"\"\"Inverse distance weighting.\n\n    xy      : (m, 2) monitor coordinates, projected (metres)\n    values  : (m,) monitor readings\n    grid_xy : (n, 2) locations to estimate\n    \"\"\"\n    d = np.linalg.norm(grid_xy[:, None, :] - xy[None, :, :], axis=2)\n    d = np.maximum(d, 1e-9)                     # avoid divide by zero at a monitor\n    w = 1.0 / d ** power\n    return (w * values[None, :]).sum(axis=1) / w.sum(axis=1)"}, {"file": "acs_join.py", "lang": "python", "project": "air", "title": "Join ACS income to block groups", "desc": "Handles the label row and GEO_ID prefix in data.census.gov downloads, then merges on GEOID.", "status": "partial", "statusText": "Join logic run, shapefile reading not run", "code": "import geopandas as gpd\nimport pandas as pd\n\n\ndef attach_income(blockgroups_path, acs_csv):\n    \"\"\"Join ACS median household income (B19013) to TIGER block groups.\"\"\"\n    # data.census.gov CSVs put human-readable labels on the second row\n    acs = pd.read_csv(acs_csv, skiprows=[1])\n    acs[\"GEOID\"] = acs[\"GEO_ID\"].str[-12:]            # strip the '1500000US' prefix\n    acs[\"median_income\"] = pd.to_numeric(acs[\"B19013_001E\"], errors=\"coerce\")  # '-' and '250,000+' become NaN\n\n    bg = gpd.read_file(blockgroups_path)\n    return bg.merge(acs[[\"GEOID\", \"median_income\"]], on=\"GEOID\", how=\"left\")"}, {"file": "exposure_by_income.py", "lang": "python", "project": "air", "title": "Exposure by income tercile", "desc": "Mean pollution for the lowest, middle and highest income thirds, plus a Spearman rank correlation.", "status": "run", "statusText": "Run on synthetic data", "code": "import pandas as pd\nfrom scipy import stats\n\n\ndef exposure_by_income(bg, pm=\"pm25\", income=\"median_income\"):\n    \"\"\"Mean exposure by income tercile, plus a rank correlation.\"\"\"\n    d = bg[[pm, income]].dropna().copy()\n    d[\"tercile\"] = pd.qcut(d[income], 3, labels=[\"lowest\", \"middle\", \"highest\"])\n    means = d.groupby(\"tercile\", observed=True)[pm].mean()\n    rho, p = stats.spearmanr(d[income], d[pm])\n    return means, rho, p"}, {"file": "monitors_per_bg.sql", "lang": "sql", "project": "air", "title": "Monitors per block group (PostGIS)", "desc": "Counts monitors inside each block group and computes its area in square kilometres.", "status": "unrun", "statusText": "Not run", "code": "-- Monitors per block group, with area in km2 (geography casts give metres)\nSELECT bg.geoid,\n       COUNT(m.id)                       AS monitors,\n       ST_Area(bg.geom::geography) / 1e6 AS area_km2\nFROM   block_groups AS bg\nLEFT JOIN monitors AS m\n       ON ST_Intersects(bg.geom, m.geom)\nGROUP  BY bg.geoid, bg.geom\nORDER  BY monitors DESC;"}];
+
+</script>
+<script>
+/* Resume content. Text in [square brackets] is a placeholder and shows highlighted.
+   Set placeholder to false once every bracket is replaced. */
+window.RESUME={
+  placeholder:true,
+  name:'[Your name]',
+  title:'[Job title, for example GIS Data Analyst]',
+  contact:['[City, State]','[email address]','[LinkedIn or GitHub URL]'],
+  summary:'[Two or three sentences: your years of experience, the environmental data you work with, and the result you are known for.]',
+  experience:[
+    {role:'[Job title]',org:'[Employer]',dates:'[Start] to [End]',bullets:[
+      '[What you built or analyzed, the method, and the measurable result. Employer details can stay general.]',
+      '[A second accomplishment, with a number if you have one.]']},
+    {role:'[Earlier job title]',org:'[Employer]',dates:'[Start] to [End]',bullets:['[Accomplishment.]']}
+  ],
+  skills:[
+    {group:'Shown in this portfolio',items:['Remote sensing and raster analysis','Zonal statistics','Time-series trend testing','Weighted overlay modeling','DEM and terrain analysis','Sea level rise scenario modeling','Spatial interpolation','Spatial joins with Census data','Cartography and data visualization','Interactive web delivery']},
+    {group:'Software',items:['[QGIS]','[ArcGIS Pro]','[Python]','[SQL / PostGIS]']},
+    {group:'Public data used',items:['USGS','NOAA','EPA','US Census Bureau','NASA Landsat','LANDFIRE','MTBS','NLCD']}
+  ],
+  education:[{what:'[Degree, field]',where:'[School]',dates:'[Year]'}],
+  certs:[{what:'[Certification]',where:'[Issuer]',dates:'[Year]'}]
+};
+
+</script>
+<script>
+(function(){
+'use strict';
+var G=window.GISMath,U=window.GISUI,$=function(id){return document.getElementById(id);};
+function num(id){var s=$(id).value.replace(/,/g,'').trim();if(s==='')return NaN;return Number(s);}
+function setMsg(id,text,isErr){var m=$(id);m.textContent=text||'';m.className='msg'+(isErr?' err':'');}
+function rows(id,list){
+  var dl=$(id);dl.textContent='';
+  list.forEach(function(r){
+    var d=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+    dt.textContent=r[0];dd.textContent=r[1];d.appendChild(dt);d.appendChild(dd);
+    if(r[2]){var b=document.createElement('button');b.type='button';b.className='cp';b.textContent='Copy';b.setAttribute('aria-label','Copy '+r[0]);
+      b.addEventListener('click',function(){U.copy(r[2]===true?r[1]:r[2],b);});d.appendChild(b);}
+    else d.appendChild(document.createElement('span'));
+    dl.appendChild(d);
+  });
+}
+function fmt(v,d){return G.round(v,d).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
+/* text fields react on input only: a change event on blur would rebuild the results and swallow the click on a Copy button */
+function on(ids,fn){ids.forEach(function(id){var el=$(id);el.addEventListener('input',fn);if(el.tagName==='SELECT')el.addEventListener('change',fn);});}
+
+/* 1. coordinates */
+function coords(){
+  var mode=$('co-mode').value,lat,lon,u;
+  if(mode==='ll'){
+    lat=G.parseCoord($('co-lat').value,true);lon=G.parseCoord($('co-lon').value,false);
+    if(isNaN(lat)||isNaN(lon)){setMsg('co-msg','Enter latitude (−90 to 90) and longitude (−180 to 180).',true);rows('co-res',[]);return;}
+    u=G.toUTM(lat,lon);
+    if(!u){setMsg('co-msg','UTM covers latitudes 80°S to 84°N. Decimal and Web Mercator results are below where they apply.',true);}else setMsg('co-msg','');
+  }else{
+    var z=parseInt($('co-zone').value,10),h=$('co-hem').value,e=num('co-e'),n=num('co-n');
+    if(!(z>=1&&z<=60)||isNaN(e)||isNaN(n)){setMsg('co-msg','Enter a zone from 1 to 60, plus an easting and northing in metres.',true);rows('co-res',[]);return;}
+    var p=G.fromUTM(z,h,e,n);lat=p.lat;lon=p.lon;
+    if(!(Math.abs(lat)<=90&&isFinite(lon))){setMsg('co-msg','Those UTM values do not give a valid position.',true);rows('co-res',[]);return;}
+    u={zone:z,band:'',hemisphere:h,easting:e,northing:n};setMsg('co-msg','');
+  }
+  var list=[['Decimal',fmt(lat,6)+', '+fmt(lon,6),fmt(lat,6)+', '+fmt(lon,6)],
+            ['DMS',G.toDMS(lat,true)+'  '+G.toDMS(lon,false),G.toDMS(lat,true)+' '+G.toDMS(lon,false)]];
+  if(u){
+    var ep=G.epsgUTM(u.zone,u.hemisphere);
+    var zl=u.band?String(u.zone)+u.band:u.zone+' '+(u.hemisphere==='S'?'South':'North');
+    list.push(['UTM',zl+'  '+fmt(u.easting,2)+' E  '+fmt(u.northing,2)+' N',zl+' '+fmt(u.easting,2)+' '+fmt(u.northing,2)]);
+    list.push(['EPSG','WGS 84 / UTM: '+ep.wgs84+(ep.nad83?'   NAD83 / UTM: '+ep.nad83:''),'EPSG:'+ep.wgs84]);
+  }
+  var wm=G.toWebMercator(lat,lon);
+  if(wm)list.push(['Web Mercator',fmt(wm.x,2)+', '+fmt(wm.y,2)+'  (EPSG:3857)',fmt(wm.x,2)+', '+fmt(wm.y,2)]);
+  rows('co-res',list);
+  return u;
+}
+function coordMode(){
+  var utm=$('co-mode').value==='utm';
+  if(utm){
+    var lat=G.parseCoord($('co-lat').value,true),lon=G.parseCoord($('co-lon').value,false),u=(isNaN(lat)||isNaN(lon))?null:G.toUTM(lat,lon);
+    if(u){$('co-zone').value=u.zone;$('co-hem').value=u.hemisphere;$('co-e').value=G.round(u.easting,2);$('co-n').value=G.round(u.northing,2);}
+  }else if($('co-zone').value){
+    var z=parseInt($('co-zone').value,10),e=num('co-e'),n=num('co-n');
+    if(z>=1&&z<=60&&!isNaN(e)&&!isNaN(n)){var p=G.fromUTM(z,$('co-hem').value,e,n);$('co-lat').value=G.round(p.lat,6);$('co-lon').value=G.round(p.lon,6);}
+  }
+  $('co-ll').hidden=utm;$('co-utm').hidden=!utm;coords();
+}
+
+/* 2. distance */
+function distance(){
+  var a=G.parseCoord($('di-lat1').value,true),b=G.parseCoord($('di-lon1').value,false),c=G.parseCoord($('di-lat2').value,true),d=G.parseCoord($('di-lon2').value,false);
+  if([a,b,c,d].some(isNaN)){setMsg('di-msg','Enter all four coordinates as decimal degrees or degrees-minutes-seconds.',true);rows('di-res',[]);return;}
+  setMsg('di-msg','');
+  var m=G.haversine(a,b,c,d),br=G.bearing(a,b,c,d),mid=G.midpoint(a,b,c,d);
+  rows('di-res',[
+    ['Kilometres',fmt(m/1000,3),fmt(m/1000,3)],
+    ['Miles',fmt(m/1609.344,3),fmt(m/1609.344,3)],
+    ['Nautical mi',fmt(m/1852,3),fmt(m/1852,3)],
+    ['Bearing',m<1e-6?'Same point':fmt(br,1)+'° ('+G.compass(br)+')',m<1e-6?null:fmt(br,1)],
+    ['Midpoint',fmt(mid.lat,5)+', '+fmt(mid.lon,5),fmt(mid.lat,5)+', '+fmt(mid.lon,5)]
+  ]);
+}
+
+/* 3. spectral index */
+var READ={ndvi:['dense vegetation above about 0.5, sparse cover 0.2 to 0.5, bare ground or pavement 0 to 0.2, water or cloud below 0',function(v){return v>0.5?'Dense vegetation':v>0.2?'Sparse vegetation':v>0?'Bare ground or impervious':'Water, snow or cloud';}],
+  ndwi:['open water usually above 0, vegetation and soil below 0',function(v){return v>0?'Likely open water':'Likely land';}],
+  nbr:['healthy vegetation is high, burned areas are low; compare before and after a fire',function(v){return v>0.3?'Healthy vegetation':v>0.1?'Low vegetation or recovering':v>-0.1?'Bare ground or low burn':'Burned or very sparse';}],
+  ndbi:['built-up surfaces are higher than vegetation, usually above 0',function(v){return v>0?'Likely built-up':'Likely vegetation or water';}]};
+function indexCalc(){
+  var k=$('ix-kind').value,d=G.INDEX[k];
+  $('ix-a-l').textContent=d.a+' reflectance';$('ix-b-l').textContent=d.b+' reflectance';
+  $('ix-formula').textContent=d.name+' = (A − B) / (A + B)   with A = '+d.a+', B = '+d.b;
+  var a=num('ix-a'),b=num('ix-b');
+  if(isNaN(a)||isNaN(b)||a<0||b<0||a>1.6||b>1.6){setMsg('ix-msg','Enter two reflectance values between 0 and 1.',true);rows('ix-res',[]);return;}
+  var v=G.spectralIndex(k,a,b);
+  if(isNaN(v)){setMsg('ix-msg','The two values cannot both be zero.',true);rows('ix-res',[]);return;}
+  setMsg('ix-msg','');
+  rows('ix-res',[[d.name,fmt(v,4),fmt(v,4)],['Reading',READ[k][1](v),null],['Rule of thumb',READ[k][0],null]]);
+}
+
+/* 4. landsat */
+function landsat(){
+  var k=$('ls-kind').value,dn=num('ls-dn');
+  $('ls-formula').textContent=k==='st'?'Kelvin = DN × 0.00341802 + 149.0':'Reflectance = DN × 0.0000275 − 0.2';
+  if(isNaN(dn)||dn<0||dn>65535){setMsg('ls-msg','Enter a pixel value from 0 to 65535.',true);rows('ls-res',[]);return;}
+  if(dn===0){setMsg('ls-msg','0 is the fill value, which marks pixels with no data.',true);rows('ls-res',[]);return;}
+  setMsg('ls-msg','');
+  if(k==='st'){var t=G.landsatSurfaceTemp(dn);rows('ls-res',[['Kelvin',fmt(t.k,2),fmt(t.k,2)],['Celsius',fmt(t.c,2),fmt(t.c,2)],['Fahrenheit',fmt(t.f,2),fmt(t.f,2)]]);}
+  else{var r=G.landsatReflectance(dn);rows('ls-res',[['Reflectance',fmt(r,4),fmt(r,4)]]);
+    if(r<0||r>1)setMsg('ls-msg','This value is outside 0 to 1, so the pixel is probably saturated or fill.',true);}
+}
+
+/* 5. scale */
+function scale(){
+  var den=num('sc-den'),cm=num('sc-cm'),dpi=num('sc-dpi');
+  if(!(den>0)||!(cm>=0)||!(dpi>0)){setMsg('sc-msg','Enter a positive scale, map distance and dpi.',true);rows('sc-res',[]);}
+  else{
+    setMsg('sc-msg','');
+    var ground=den*cm/100;
+    rows('sc-res',[['Ground distance',fmt(ground,1)+' m  ('+fmt(ground/1000,3)+' km)',fmt(ground,1)],['1 cm on map',fmt(den/100,1)+' m on the ground',null],['1 pixel',fmt(den*0.0254/dpi,2)+' m at '+dpi+' dpi',null]]);
+  }
+  var g=num('sc-g'),m=num('sc-m');
+  if(!(g>0)||!(m>0))rows('sc-res2',[['Scale','Enter a ground distance and a map distance above',null]]);
+  else rows('sc-res2',[['Scale','1 : '+fmt(g*100/m,0),'1:'+Math.round(g*100/m)]]);
+}
+
+/* 6. slope */
+function slope(){
+  var v=num('sl-v'),k=$('sl-kind').value;
+  if(isNaN(v)||v<0||(k==='deg'&&v>=90)){setMsg('sl-msg',k==='deg'?'Enter degrees from 0 to under 90.':'Enter a percent grade of 0 or more.',true);rows('sl-res',[]);return;}
+  setMsg('sl-msg','');
+  var s=k==='deg'?G.slopeFromDegrees(v):G.slopeFromPercent(v);
+  rows('sl-res',[['Degrees',fmt(s.deg,2)+'°',fmt(s.deg,2)],['Percent',fmt(s.pct,1)+'%',fmt(s.pct,1)],['Rise : run',isFinite(s.run)?'1 : '+fmt(s.run,2):'Flat',null]]);
+}
+
+/* 7. geojson */
+var SAMPLE={type:'FeatureCollection',features:[
+  {type:'Feature',properties:{name:'Study area'},geometry:{type:'Polygon',coordinates:[[[-80.04,40.41],[-79.94,40.41],[-79.94,40.47],[-80.04,40.47],[-80.04,40.41]],[[-80.0,40.43],[-79.97,40.43],[-79.97,40.45],[-80.0,40.45],[-80.0,40.43]]]}},
+  {type:'Feature',properties:{name:'Stream'},geometry:{type:'LineString',coordinates:[[-80.04,40.44],[-80.0,40.46],[-79.97,40.42],[-79.94,40.44]]}},
+  {type:'Feature',properties:{name:'Monitor A'},geometry:{type:'Point',coordinates:[-80.02,40.42]}},
+  {type:'Feature',properties:{name:'Monitor B'},geometry:{type:'Point',coordinates:[-79.96,40.46]}}]};
+function preview(res){
+  var W=420,H=260,pad=16,b=res.bbox;if(!b)return '';
+  var proj=res.areaM2===null,kx=proj?1:Math.max(0.05,Math.cos(((b[1]+b[3])/2)*Math.PI/180));
+  var w=(b[2]-b[0])*kx,h=b[3]-b[1],s=Math.min(w>0?(W-2*pad)/w:1e9,h>0?(H-2*pad)/h:1e9);if(!isFinite(s)||s>1e8)s=1;
+  var ox=pad+((W-2*pad)-w*s)/2,oy=pad+((H-2*pad)-h*s)/2;
+  function X(x){return (ox+(x-b[0])*kx*s).toFixed(1);}
+  function Y(y){return (H-oy-(y-b[1])*s).toFixed(1);}
+  var pg='',ln='',pt='',n=0;
+  res.shapes.forEach(function(sh){
+    if(n++>3000)return;
+    if(sh.t==='pg'){var d='';sh.c.forEach(function(r){d+=r.map(function(p,i){return (i?'L':'M')+X(p[0])+' '+Y(p[1]);}).join('')+'Z';});pg+='<path d="'+d+'" fill-rule="evenodd" fill="var(--accent)" fill-opacity="0.22" stroke="var(--accent)" stroke-width="1.5"/>';}
+    else if(sh.t==='ln'){ln+='<path d="'+sh.c.map(function(p,i){return (i?'L':'M')+X(p[0])+' '+Y(p[1]);}).join('')+'" fill="none" stroke="var(--water)" stroke-width="2"/>';}
+    else sh.c.forEach(function(p){pt+='<circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="4" fill="var(--heat)" stroke="var(--surface)" stroke-width="1.5"/>';});
+  });
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Preview of the GeoJSON geometry">'+pg+ln+pt+'</svg>';
+}
+function geojson(){
+  var text=$('gj-text').value,pill=$('gj-pill');
+  if(!text.trim()){pill.className='pill';pill.textContent='Waiting for input';setMsg('gj-msg','');rows('gj-res',[]);$('gj-prev').innerHTML='';return;}
+  var r=G.inspectGeoJSON(text);
+  if(!r.ok){pill.className='pill warn';pill.textContent='Problem found';setMsg('gj-msg',r.errors.join(' '),true);rows('gj-res',[]);$('gj-prev').innerHTML='';return;}
+  pill.className='pill live';pill.textContent='Valid structure';
+  setMsg('gj-msg',r.warnings.join(' '),r.warnings.length>0);
+  var types=Object.keys(r.types).map(function(t){return t+' × '+r.types[t];}).join(', ')||'none';
+  var list=[['Features',String(r.features),null],['Geometries',types,null],['Vertices',r.vertices.toLocaleString('en-US'),null]];
+  if(r.bbox)list.push(['Bounds',fmt(r.bbox[0],5)+', '+fmt(r.bbox[1],5)+' to '+fmt(r.bbox[2],5)+', '+fmt(r.bbox[3],5),r.bbox.map(function(v){return G.round(v,6);}).join(',')]);
+  if(r.areaM2!==null&&r.areaM2>0)list.push(['Area',fmt(r.areaM2/1e6,3)+' km²  ('+fmt(r.areaM2/4046.8564224,1)+' acres)',fmt(r.areaM2/1e6,3)]);
+  if(r.lengthM!==null&&r.lengthM>0)list.push(['Line length',fmt(r.lengthM/1000,3)+' km',fmt(r.lengthM/1000,3)]);
+  rows('gj-res',list);
+  $('gj-prev').innerHTML=preview(r);
+}
+
+function init(){
+  /* coordinates */
+  on(['co-lat','co-lon','co-zone','co-hem','co-e','co-n'],coords);$('co-mode').addEventListener('change',coordMode);
+  coords();
+  on(['di-lat1','di-lon1','di-lat2','di-lon2'],distance);distance();
+  var sel=$('ix-kind');Object.keys(G.INDEX).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=G.INDEX[k].name;sel.appendChild(o);});
+  on(['ix-kind','ix-a','ix-b'],indexCalc);indexCalc();
+  on(['ls-kind','ls-dn'],landsat);landsat();
+  on(['sc-den','sc-cm','sc-dpi','sc-g','sc-m'],scale);scale();
+  on(['sl-kind','sl-v'],slope);slope();
+  $('gj-text').value=JSON.stringify(SAMPLE,null,2);geojson();
+  $('gj-run').addEventListener('click',geojson);
+  $('gj-text').addEventListener('input',geojson);
+  $('gj-sample').addEventListener('click',function(){$('gj-text').value=JSON.stringify(SAMPLE,null,2);geojson();});
+  $('gj-clear').addEventListener('click',function(){$('gj-text').value='';geojson();});
+  $('gj-file').addEventListener('change',function(e){
+    var f=e.target.files&&e.target.files[0];if(!f)return;
+    if(f.size>8*1024*1024){setMsg('gj-msg','That file is over 8 MB. Trim it to a smaller area first.',true);return;}
+    var rd=new FileReader();rd.onload=function(){$('gj-text').value=String(rd.result);geojson();};
+    rd.onerror=function(){setMsg('gj-msg','The file could not be read.',true);};rd.readAsText(f);
+  });
+  /* jump chips */
+  var jump=$('tool-jump');
+  [['tool-coords','Coordinates'],['tool-distance','Distance'],['tool-index','Spectral index'],['tool-landsat','Landsat scaling'],['tool-scale','Map scale'],['tool-slope','Slope'],['tool-geojson','GeoJSON'],['tool-crs','CRS table']].forEach(function(t){
+    var a=document.createElement('a');a.className='chip';a.href='#'+t[0];a.textContent=t[1];a.style.textDecoration='none';jump.appendChild(a);});
+}
+init();
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+var U=window.GISUI,esc=U.esc,$=function(id){return document.getElementById(id);};
+var PYKW={};'and as assert break class continue def del elif else except finally for from global if import in is lambda not or pass raise return try while with yield None True False'.split(' ').forEach(function(k){PYKW[k]=1;});
+var SQLKW={};'select from where join left right inner outer on group by order as and or not in is null asc desc limit having distinct case when then else end union all'.split(' ').forEach(function(k){SQLKW[k]=1;});
+function hl(src,lang){
+  var sql=lang==='sql',kw=sql?SQLKW:PYKW;
+  var re=sql?/(--[^\n]*)|('(?:[^']|'')*')|(\b\d+(?:\.\d+)?(?:e\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)/g
+            :/(#[^\n]*)|("""[\s\S]*?"""|'''[\s\S]*?''')|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(\b\d+(?:\.\d+)?(?:e-?\d+)?\b)|([A-Za-z_][A-Za-z0-9_]*)/g;
+  var out='',last=0,m,cls;
+  while((m=re.exec(src))){
+    out+=esc(src.slice(last,m.index));
+    var t=m[0];
+    if(m[1]&&(sql||t.charAt(0)==='#'||t.slice(0,2)==='--'))cls='c';
+    else if(sql){cls=m[2]?'s':m[3]?'n':(kw[t.toLowerCase()]?'k':(src.charAt(re.lastIndex)==='('?'f':''));}
+    else{cls=(m[2]||m[3])?'s':m[4]?'n':(kw[t]?'k':(src.charAt(re.lastIndex)==='('?'f':''));}
+    out+=cls?'<span class="tk-'+cls+'">'+esc(t)+'</span>':esc(t);
+    last=re.lastIndex;
+  }
+  return out+esc(src.slice(last));
+}
+window.GISHighlight=hl;
+var LABEL={all:'All',heat:'Heat',water:'Water',fire:'Fire',coast:'Coast',air:'Air'};
+var PILL={run:['live','Run'],partial:['','Partly run'],unrun:['outline','Not run']};
+var cur='all';
+function render(){
+  var list=(window.SNIPPETS||[]).filter(function(s){return cur==='all'||s.project===cur;});
+  $('snips').innerHTML=list.map(function(s,i){
+    var p=PILL[s.status]||PILL.unrun;
+    return '<article class="snip" id="snip-'+esc(s.file)+'"><div class="snip-h"><div class="snip-bar"><span class="pill outline">'+esc(LABEL[s.project])+'</span><span class="pill '+p[0]+'" title="'+esc(s.statusText)+'"><i></i>'+p[1]+'</span></div>'+
+      '<h3>'+esc(s.title)+'</h3><p>'+esc(s.desc)+'</p></div>'+
+      '<div class="snip-file"><span>'+esc(s.file)+'  ·  '+esc(s.statusText)+'</span><button class="cp" type="button" data-i="'+i+'">Copy</button></div>'+
+      '<pre class="code" tabindex="0"><code>'+hl(s.code,s.lang)+'</code></pre></article>';
+  }).join('')||'<p class="note">No snippets for this project yet.</p>';
+  Array.prototype.forEach.call($('snips').querySelectorAll('button.cp'),function(b){
+    b.addEventListener('click',function(){U.copy(list[+b.dataset.i].code,b);});});
+}
+function init(){
+  var box=$('code-filter');
+  Object.keys(LABEL).forEach(function(k){
+    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=LABEL[k];b.setAttribute('aria-pressed',k==='all'?'true':'false');
+    b.addEventListener('click',function(){cur=k;Array.prototype.forEach.call(box.children,function(c){c.setAttribute('aria-pressed','false');});b.setAttribute('aria-pressed','true');render();});
+    box.appendChild(b);});
+  render();
+}
+init();
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+var R=window.RESUME,esc=window.GISUI.esc,$=function(id){return document.getElementById(id);};
+function f(s){return esc(s).replace(/\[[^\]]+\]/g,function(m){return '<mark class="ph-text">'+m+'</mark>';});}
+function sec(title,body){return '<section class="cv-sec"><h2>'+title+'</h2><div class="cv-body">'+body+'</div></section>';}
+function item(h,org,dates,bul){
+  return '<div class="cv-item"><div class="cv-row"><h3>'+f(h)+'</h3><span class="cv-dates">'+f(dates||'')+'</span></div>'+(org?'<div class="cv-org">'+f(org)+'</div>':'')+
+    (bul&&bul.length?'<ul>'+bul.map(function(b){return '<li>'+f(b)+'</li>';}).join('')+'</ul>':'')+'</div>';
+}
+var html='<header class="cv-head"><h1>'+f(R.name)+'</h1><div class="cv-title">'+f(R.title)+'</div><div class="cv-contact">'+R.contact.map(function(c){return '<span>'+f(c)+'</span>';}).join('')+'</div>'+
+  (R.placeholder?'<p class="cv-note">This resume is a template. Highlighted text in brackets is a placeholder that gets replaced with real details.</p>':'')+'</header>';
+html+=sec('Summary','<p>'+f(R.summary)+'</p>');
+html+=sec('Experience',R.experience.map(function(e){return item(e.role,e.org,e.dates,e.bullets);}).join(''));
+var P=(window.GIS&&window.GIS.PROJECTS)||[];
+html+=sec('Projects',P.map(function(p){return '<div class="cv-item"><div class="cv-row"><h3><a href="#'+esc(p.id)+'">'+esc(p.title)+'</a></h3></div><div class="cv-org">'+esc(p.q)+'</div><div class="cv-dates">'+esc(p.tags)+'</div></div>';}).join(''));
+html+=sec('Skills','<div class="cv-skills">'+R.skills.map(function(g){return '<div><h3>'+esc(g.group)+'</h3><div class="pills">'+g.items.map(function(i){return '<span class="pill">'+f(i)+'</span>';}).join('')+'</div></div>';}).join('')+'</div>');
+html+=sec('Education',R.education.map(function(e){return item(e.what,e.where,e.dates);}).join(''));
+html+=sec('Certifications',R.certs.map(function(e){return item(e.what,e.where,e.dates);}).join(''));
+$('cv').innerHTML=html;
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+var esc=window.GISUI.esc;
+var P=(window.GIS&&window.GIS.PROJECTS)||[];
+document.getElementById('home-index').innerHTML=P.map(function(p){
+  return '<li><a href="#'+esc(p.id)+'"><span class="t">'+esc(p.title)+'</span><span class="m">'+esc(p.tags)+'</span><span class="pills"><span class="pill live"><i></i>Demo live</span></span></a></li>';}).join('');
+var n=document.querySelector('[data-count="code"]');if(n)n.textContent=String((window.SNIPPETS||[]).length);
+if(window.GIS)window.GIS.initBand();
+})();
+
+</script>
+<script>
+(function(){
+'use strict';
+var PAGES=['home','maps','code','tools','resume'];
+var SUB={heat:'maps',water:'maps',fire:'maps',coast:'maps',air:'maps'};
+Array.prototype.forEach.call(document.querySelectorAll('.tool[id]'),function(t){SUB[t.id]='tools';});
+var links=Array.prototype.slice.call(document.querySelectorAll('#nav a'));
+function show(){
+  var h=(location.hash||'#home').slice(1),page=PAGES.indexOf(h)>-1?h:(SUB[h]||'home');
+  PAGES.forEach(function(p){document.getElementById('page-'+p).hidden=(p!==page);});
+  links.forEach(function(a){if(a.getAttribute('href')==='#'+page)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  if(page==='maps'&&window.GIS)window.GIS.initDemos();
+  var target=SUB[h]?document.getElementById(h):null;
+  if(target)target.scrollIntoView();else window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',show);
+/* theme */
+var root=document.documentElement;
+try{var saved=localStorage.getItem('gis-theme');if(saved==='dark'||saved==='light')root.setAttribute('data-theme',saved);}catch(e){}
+document.getElementById('theme-btn').addEventListener('click',function(){
+  var cur=root.getAttribute('data-theme')||(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  var next=cur==='dark'?'light':'dark';root.setAttribute('data-theme',next);
+  try{localStorage.setItem('gis-theme',next);}catch(e){}
+});
+show();
+})();
+
+</script>
